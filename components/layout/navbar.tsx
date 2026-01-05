@@ -20,10 +20,9 @@ export function Navbar() {
     }, []);
 
     const navLinks = [
-        { name: "Experiencia", href: "#experience" },
-        { name: "Proyectos", href: "#projects" },
-        { name: "Stack", href: "#stack" },
-        { name: "Contacto", href: "#contact" },
+        { name: "BUSCAR TRABAJO", href: "#hero" },
+        { name: "SOLUCIONES", href: "#soluciones" },
+        { name: "USUARIO", href: "#vitrina" },
     ];
 
     return (
@@ -41,7 +40,7 @@ export function Navbar() {
                         <Terminal className="w-5 h-5 text-primary" />
                     </div>
                     <span className="font-bold text-lg tracking-tight">
-                        CP<span className="text-primary">.dev</span>
+                        pro<span className="text-primary">Card</span>
                     </span>
                 </Link>
 
@@ -57,8 +56,8 @@ export function Navbar() {
                         </Link>
                     ))}
                     <Button variant="default" size="sm" asChild>
-                        <Link href={PROFILE.socials[0].url} target="_blank">
-                            Let's Talk
+                        <Link href="/login">
+                            LOGIN
                         </Link>
                     </Button>
                 </nav>

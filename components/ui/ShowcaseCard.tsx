@@ -46,6 +46,23 @@ const VARIANTS = {
     }
 };
 
+const SocialIcon = ({ name, url, className }: { name: string, url: string, className?: string }) => {
+    const Icons: Record<string, LucideIcon> = {
+        LinkedIn: Linkedin,
+        GitHub: Github,
+        Mail: Mail,
+        Youtube: Youtube,
+    };
+
+    const Icon = Icons[name] || FileText;
+
+    return (
+        <a href={url} target="_blank" rel="noopener noreferrer" className={className}>
+            <Icon size={20} />
+        </a>
+    );
+}
+
 export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
     const flavor = VARIANTS[profile.industry as keyof typeof VARIANTS] || VARIANTS.Tech;
 
@@ -67,21 +84,21 @@ export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
                         <div className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs uppercase tracking-widest mb-4 border", flavor.badge)}>
                             {profile.industry} PROFESSIONAL
                         </div>
-                        <h1 className={cn("text-4xl md:text-5xl mb-2", flavor.name)}>
+                        <h1 className={cn("text-4xl md:text-5xl mb-2 tracking-tighter", flavor.name)}>
                             {profile.name}
                         </h1>
                         <p className="text-lg opacity-80">{profile.headline}</p>
                     </div>
 
-                    <div className="prose prose-sm max-w-none text-inherit opacity-70">
+                    <div className="prose prose-sm max-w-none text-inherit opacity-70 italic font-serif">
                         <p>{profile.bio}</p>
                     </div>
 
                     {/* Attributes Grid */}
-                    <div className="grid grid-cols-2 gap-4 pt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4 border-t border-current/10">
                         {profile.attributes.map((attr, idx) => (
                             <div key={idx} className="space-y-1">
-                                <span className="text-xs uppercase opacity-50 block">{attr.label}</span>
+                                <span className="text-[10px] uppercase opacity-40 block tracking-widest">{attr.label}</span>
                                 <span className={cn("text-lg", flavor.metricValue)}>{attr.value}</span>
                             </div>
                         ))}
@@ -90,33 +107,47 @@ export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
 
                 {/* Right Column: Actions / Stats / Contact */}
                 <div className="flex flex-col justify-between border-l border-current/10 pl-8 space-y-8">
-                    <div className="space-y-4">
-                        <span className="text-xs uppercase opacity-50">Location</span>
-                        <div className="font-medium">{profile.location}</div>
+                    <div className="space-y-2">
+                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Location</span>
+                        <div className="font-medium text-sm">{profile.location}</div>
                     </div>
 
                     <div className="space-y-4">
-                        <span className="text-xs uppercase opacity-50">Connect</span>
+                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Verification Status</span>
+                        <div className="flex items-center gap-2 text-xs">
+                            <CheckCircle2 size={14} className="text-green-500" />
+                            <span className="text-green-500/80 font-mono">VALIDATED</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Connect</span>
                         <div className="flex gap-4">
-                            <SocialIcon name="LinkedIn" className={flavor.icon} />
-                            <SocialIcon name="Mail" className={flavor.icon} />
+                            {profile.socials?.map((social, idx) => (
+                                <SocialIcon
+                                    key={idx}
+                                    name={social.platform}
+                                    url={social.url}
+                                    className={flavor.icon}
+                                />
+                            ))}
                         </div>
                     </div>
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
                         <EditProfileModal profile={profile} />
                         <a href={`/showcase/${profile.id}`} className={cn(
-                            "w-full py-3 px-6 rounded-lg font-medium text-center transition-colors border-2",
+                            "w-full py-2.5 px-6 rounded-lg text-sm font-medium text-center transition-all border",
                             profile.industry === 'Tech'
-                                ? "border-cyan-500/30 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
                                 : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
                         )}>
                             View Full Profile
                         </a>
                         <button className={cn(
-                            "w-full py-3 px-6 rounded-lg font-bold transition-all",
+                            "w-full py-3 px-6 rounded-lg text-sm font-bold transition-all uppercase tracking-widest",
                             profile.industry === 'Tech'
-                                ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                                ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.3)]"
                                 : "bg-slate-900 hover:bg-slate-800 text-white"
                         )}>
                             {profile.industry === 'Tech' ? 'INITIALIZE_CONTACT' : 'Solicitar Entrevista'}
@@ -127,8 +158,3 @@ export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
         </motion.div>
     );
 };
-
-const SocialIcon = ({ name, className }: { name: string, className?: string }) => {
-    // Simplified map
-    return <div className={cn("w-6 h-6 bg-current/20 rounded-full", className)} />
-}

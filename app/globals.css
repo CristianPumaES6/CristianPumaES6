@@ -101,6 +101,8 @@
   /* Typewriter specific */
   --animate-typewriter: typing 3s steps(40, end);
   --animate-blink: blink-caret .75s step-end infinite;
+  --animate-flicker: flicker 0.15s infinite;
+  --animate-scanline: scanline 8s linear infinite;
 
   @keyframes typing {
     from {
@@ -110,6 +112,33 @@
     to {
       width: 100%
     }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: var(--color-primary) }
+  }
+
+  @keyframes flicker {
+    0% { opacity: 0.97; }
+    5% { opacity: 0.95; }
+    10% { opacity: 0.9; }
+    15% { opacity: 0.95; }
+    20% { opacity: 0.98; }
+    25% { opacity: 0.95; }
+    30% { opacity: 0.9; }
+    35% { opacity: 0.99; }
+    40% { opacity: 0.9; }
+    45% { opacity: 0.95; }
+    50% { opacity: 0.98; }
+    55% { opacity: 0.95; }
+    60% { opacity: 0.9; }
+    100% { opacity: 0.99; }
+  }
+
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
   }
 }
 
@@ -164,6 +193,11 @@
 
   --radius: 0.5rem;
   /* Back to slight rounding for modern feel */
+
+  /* Role Specific Colors */
+  --tech-neon: 180 100% 50%;
+  --legal-gold: 45 100% 50%;
+  --business-purple: 280 100% 70%;
 }
 
 .dark {
@@ -213,11 +247,31 @@
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
   }
 
+  .text-glow-tech {
+    text-shadow: 0 0 15px hsla(var(--tech-neon), 0.5);
+  }
+
+  .text-glow-legal {
+    text-shadow: 0 0 15px hsla(var(--legal-gold), 0.5);
+  }
+
   .bg-grid-pattern-subtle {
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
     mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+  }
+
+  .terminal-box {
+    @apply border border-primary/30 bg-black/40 relative overflow-hidden;
+    box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.05);
+  }
+
+  .terminal-box::before {
+    content: "";
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
   }
 
   /* Typewriter Utility */
@@ -227,5 +281,22 @@
     white-space: nowrap;
     animation: typing 2.5s steps(40, end);
     vertical-align: bottom;
+  }
+
+  .neon-border-tech {
+    @apply border-primary/50 hover:border-primary transition-colors;
+    box-shadow: 0 0 10px hsla(var(--tech-neon), 0.2);
+  }
+
+  .neon-border-legal {
+    border-color: hsla(var(--legal-gold), 0.5);
+    @apply hover:border-[hsla(var(--legal-gold),1)] transition-colors;
+    box-shadow: 0 0 10px hsla(var(--legal-gold), 0.2);
+  }
+
+  .neon-border-business {
+    border-color: hsla(var(--business-purple), 0.5);
+    @apply hover:border-[hsla(var(--business-purple),1)] transition-colors;
+    box-shadow: 0 0 10px hsla(var(--business-purple), 0.2);
   }
 }
