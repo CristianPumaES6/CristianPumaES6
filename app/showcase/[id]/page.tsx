@@ -86,6 +86,10 @@ export default async function ProfileDetailsPage({ params }: { params: Promise<{
     const isTech = profile.industry === 'Tech';
     const theme = THEMES[profile.industry as keyof typeof THEMES] || THEMES.Tech;
 
+    // Calculate Professional Stats
+    const expAttr = profile.attributes.find((a: any) => a.label === 'EXPERIENCIA');
+    const yearsOfExp = expAttr ? expAttr.value : null;
+
     // Data Mapping for Landing Components
     if (isTech) {
         // Map experiences to About specialties (Capabilities)
@@ -111,7 +115,11 @@ export default async function ProfileDetailsPage({ params }: { params: Promise<{
 
                 <Hero profile={profile} />
                 <About specialties={specialties.length > 0 ? specialties : undefined} />
-                <LandingProjects projects={profile.projects} />
+                <LandingProjects
+                    projects={profile.projects}
+                    yearsOfExperience={yearsOfExp}
+                    education={profile.education}
+                />
                 <LandingStack stack={stack} />
                 <LandingFooter profile={profile} />
             </div>
@@ -119,9 +127,6 @@ export default async function ProfileDetailsPage({ params }: { params: Promise<{
     }
 
     // --- LEGAL THEME (Legacy/Default) ---
-    const expAttr = profile.attributes.find((a: any) => a.label === 'EXPERIENCIA');
-    const yearsOfExp = expAttr ? expAttr.value : null;
-
     return (
         <div className={theme.page}>
             <nav className={cn("fixed top-0 w-full z-50 h-16 flex items-center px-6 backdrop-blur-sm bg-white/90 border-b border-slate-100")}>
