@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { LucideIcon, Github, Linkedin, Mail, Youtube, FileText, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EditProfileModal } from "@/components/EditProfileModal";
 
 // --- Types (Matched to Prisma Schema roughly) ---
 interface Attribute {
@@ -103,6 +104,7 @@ export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
                     </div>
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
+                        <EditProfileModal profile={profile} />
                         <a href={`/showcase/${profile.id}`} className={cn(
                             "w-full py-3 px-6 rounded-lg font-medium text-center transition-colors border-2",
                             profile.industry === 'Tech'

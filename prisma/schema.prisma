@@ -87,9 +87,12 @@ model SkillItem {
 model Project {
   id          String       @id @default(uuid())
   title       String
-  description String?      // "context" in input data
-  outcome     String?      // "result" in input data
-  solution    String?
+  client      String?
+  type        String?      // "Personal" | "Laboral"
+  description String?      // "context" / "challenge"
+  solution    String?      // "technical solution"
+  outcome     String?      // "result"
+  imageUrl    String?
   highlight   Boolean      @default(false)
   
   tags        ProjectTag[]

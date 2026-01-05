@@ -1,5 +1,6 @@
 import { getShowcaseProfiles } from "@/lib/actions";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
+import { CreateProfileModal } from "@/components/CreateProfileModal";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,10 @@ export default async function ShowcasePage() {
 
     return (
         <div className="min-h-screen bg-slate-50 p-8 space-y-12">
-            <header className="max-w-4xl mx-auto text-center mb-16">
+            <header className="max-w-4xl mx-auto text-center mb-16 relative">
+                <div className="absolute right-0 top-0">
+                    <CreateProfileModal />
+                </div>
                 <h1 className="text-3xl font-bold tracking-tight mb-2 text-slate-900">
                     Professional Showcase
                 </h1>
