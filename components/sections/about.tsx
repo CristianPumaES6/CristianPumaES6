@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { Boxes, Zap, ShieldCheck, Database, Server, Smartphone } from "lucide-react";
 
-export function About() {
-    const capabilities = [
+export function About({ specialties }: { specialties?: any[] }) {
+    const defaultCapabilities = [
         {
             icon: Boxes,
             title: "Arquitecturas Escalables",
@@ -43,6 +43,21 @@ export function About() {
         },
     ];
 
+    const iconMap: any = {
+        'Arquitecturas Escalables': Boxes,
+        'Integraciones Complejas': Zap,
+        'Sistemas Críticos': ShieldCheck,
+        'Optimización de Datos': Database,
+        'Mobile & Offline': Smartphone,
+        'Liderazgo Técnico': Server,
+    };
+
+    const displayCapabilities = specialties ? specialties.map(spec => ({
+        title: spec.title || spec,
+        description: spec.description || spec.period || '',
+        icon: iconMap[spec.title] || Boxes
+    })) : defaultCapabilities;
+
     return (
         <section id="experience" className="py-20 bg-accent/5">
             <div className="container px-4 mx-auto">
@@ -54,7 +69,7 @@ export function About() {
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {capabilities.map((item, index) => (
+                    {displayCapabilities.map((item: any, index: number) => (
                         <motion.div
                             key={item.title}
                             initial={{ opacity: 0, y: 20 }}

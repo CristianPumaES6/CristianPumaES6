@@ -6,7 +6,21 @@ import { ArrowRight, Terminal } from "lucide-react";
 import Link from "next/link";
 import { PROFILE } from "@/data/profile";
 
-export function Hero() {
+export function Hero({ profile }: { profile?: any }) {
+    const data = profile ? {
+        summary: profile.bio,
+        name: profile.name,
+        headline: profile.headline,
+        ranking: profile.attributes?.find((a: any) => a.label === 'RANKING')?.value || '#339',
+        experience: profile.attributes?.find((a: any) => a.label === 'EXPERIENCIA')?.value || '+7',
+    } : {
+        summary: PROFILE.personal.summary,
+        name: PROFILE.personal.name,
+        headline: PROFILE.personal.role,
+        ranking: PROFILE.personal.ranking,
+        experience: '+7',
+    };
+
     return (
         <section className="relative min-h-[90vh] flex items-center justify-center pt-20 overflow-hidden">
             {/* Background Elements */}
@@ -27,27 +41,27 @@ export function Hero() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                         </span>
-                        <span className="font-medium tracking-wide text-xs uppercase">Open to Opportunities</span>
+                        <span className="font-medium tracking-wide text-xs uppercase text-primary">Open to Opportunities</span>
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight text-white">
-                        Architecting <br />
+                        {profile ? "Unlocking" : "Architecting"} <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                             Digital Resilience
                         </span>
                     </h1>
 
                     <p className="text-lg text-muted-foreground/80 max-w-lg leading-relaxed font-light">
-                        {PROFILE.personal.summary}
+                        {data.summary}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        <Button size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(0,255,255,0.2)] rounded-full px-8 transition-all duration-300 transform hover:-translate-y-1" asChild>
+                        <Button size="lg" className="gap-2 bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,255,255,0.2)] rounded-full px-8 transition-all duration-300 transform hover:-translate-y-1" asChild>
                             <Link href="#projects">
                                 View Case Studies <ArrowRight className="w-4 h-4" />
                             </Link>
                         </Button>
-                        <Button size="lg" variant="ghost" className="gap-2 text-foreground hover:bg-white/5 rounded-full px-8" asChild>
+                        <Button size="lg" variant="ghost" className="gap-2 text-white hover:bg-white/5 rounded-full px-8" asChild>
                             <Link href="#contact">
                                 Contact Me
                             </Link>
@@ -57,15 +71,15 @@ export function Hero() {
                     <div className="pt-8 flex items-center gap-12 text-sm text-muted-foreground border-t border-white/5">
                         <div className="flex flex-col">
                             <strong className="text-3xl text-white font-bold">
-                                +7
+                                {data.experience}
                             </strong>
                             <span>Years Experience</span>
                         </div>
                         <div className="flex flex-col">
                             <strong className="text-3xl text-white font-bold">
-                                Top 1%
+                                {data.ranking}
                             </strong>
-                            <span>OutSystems Rank</span>
+                            <span>Global Rank</span>
                         </div>
                     </div>
                 </motion.div>
@@ -100,8 +114,8 @@ export function Hero() {
                                     "> ACCESS GRANTED.",
                                     "",
                                     "Loading architect profile...",
-                                    "> Name: Cristian Puma",
-                                    "> Role: Senior Software Architect",
+                                    `> Name: ${data.name}`,
+                                    `> Role: ${data.headline}`,
                                     "> Status: Ready for Deployment",
                                     "",
                                     "Awaiting command input..."

@@ -3,45 +3,78 @@
 import { PROFILE } from "@/data/profile";
 import Link from "next/link";
 
-export function Footer() {
+import { Github, Linkedin, Mail, Youtube, Link2 } from "lucide-react";
+
+export function Footer({ profile }: { profile?: any }) {
+    const data = profile ? {
+        name: profile.name,
+        summary: profile.bio,
+        email: profile.email,
+        phone: profile.phone,
+        location: profile.location,
+        socials: profile.socials.map((s: any) => {
+            const iconMap: any = { Github, Linkedin, Mail, Youtube };
+            return { name: s.platform, url: s.url, icon: iconMap[s.iconName] || Link2 };
+        })
+    } : {
+        name: "Cristian Puma",
+        summary: PROFILE.personal.summary,
+        email: PROFILE.personal.email,
+        phone: PROFILE.personal.phone,
+        location: PROFILE.personal.location,
+        socials: PROFILE.socials
+    };
+
     return (
-        <footer id="contact" className="py-12 border-t border-border bg-card/20 ">
+        <footer id="contact" className="py-20 border-t border-white/5 bg-[#0a0b10] relative overflow-hidden">
+            {/* Background Accent */}
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10" />
+
             <div className="container px-4 mx-auto">
-                <div className="grid md:grid-cols-3 gap-8 mb-8">
-                    <div className="space-y-4">
-                        <h4 className="text-lg font-bold">Cristian Puma</h4>
-                        <p className="text-muted-foreground text-sm max-w-xs">{PROFILE.personal.summary}</p>
+                <div className="grid md:grid-cols-3 gap-16 mb-16">
+                    <div className="space-y-6">
+                        <h4 className="text-xl font-bold text-white tracking-tight">{data.name}</h4>
+                        <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">{data.summary}</p>
                     </div>
 
-                    <div className="space-y-4">
-                        <h4 className="text-lg font-bold">Contacto</h4>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li>{PROFILE.personal.email}</li>
-                            <li>{PROFILE.personal.phone}</li>
-                            <li>{PROFILE.personal.location}</li>
+                    <div className="space-y-6">
+                        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary">Contacto</h4>
+                        <ul className="space-y-3 text-sm text-muted-foreground font-mono">
+                            <li className="flex items-center gap-2 hover:text-white transition-colors">
+                                <span className="w-1 h-1 rounded-full bg-primary" /> {data.email}
+                            </li>
+                            <li className="flex items-center gap-2 hover:text-white transition-colors">
+                                <span className="w-1 h-1 rounded-full bg-primary" /> {data.phone}
+                            </li>
+                            <li className="flex items-center gap-2 hover:text-white transition-colors">
+                                <span className="w-1 h-1 rounded-full bg-primary" /> {data.location}
+                            </li>
                         </ul>
                     </div>
 
-                    <div className="space-y-4">
-                        <h4 className="text-lg font-bold">Social</h4>
+                    <div className="space-y-6">
+                        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary">Social Channels</h4>
                         <div className="flex gap-4">
-                            {PROFILE.socials.map(social => (
+                            {data.socials.map((social: any) => (
                                 <Link
                                     key={social.name}
                                     href={social.url}
                                     target="_blank"
-                                    className="p-2 bg-accent rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                                    className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-primary hover:text-black hover:border-primary transition-all duration-300 group"
                                 >
-                                    <social.icon className="w-5 h-5" />
+                                    <social.icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                 </Link>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-                    <p>© {new Date().getFullYear()} Cristian Puma. Todos los derechos reservados.</p>
-                    <p className="text-xs">Built with Next.js & Tailwind</p>
+                <div className="border-t border-white/5 pt-12 text-center text-xs text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-6 uppercase tracking-widest font-bold">
+                    <p>© {new Date().getFullYear()} {data.name}. Todos los derechos reservados.</p>
+                    <div className="flex gap-8">
+                        <span className="hover:text-primary transition-colors cursor-pointer">Built with precision</span>
+                        <span className="hover:text-primary transition-colors cursor-pointer">Security First</span>
+                    </div>
                 </div>
             </div>
         </footer>
