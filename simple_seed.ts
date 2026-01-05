@@ -13,6 +13,8 @@ async function main() {
         await prisma.profile.create({
             data: {
                 industry: "Legal",
+                firstName: "Nayeli Ariana",
+                lastName: "Caballa Rejas",
                 name: "Nayeli Ariana Caballa Rejas",
                 headline: "Estudiante de Derecho",
                 location: "Santa Anita, Lima",
@@ -35,6 +37,8 @@ async function main() {
         await prisma.profile.create({
             data: {
                 industry: "Tech",
+                firstName: "Cristian Angel",
+                lastName: "Puma Villalva",
                 name: "Cristian Angel Puma Villalva",
                 headline: "Senior Software Architect",
                 location: "Lima, Peru",

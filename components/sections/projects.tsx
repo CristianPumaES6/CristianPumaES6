@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Badge } from "lucide-react"; // Wait, Badge is usually a component, let's make a simple one inline or use standard div
 import { PROFILE } from "@/data/profile";
-export function Projects({ projects, yearsOfExperience, education }: { projects?: any[], yearsOfExperience?: string | null, education?: any[] }) {
+export function Projects({ projects, yearsOfExperience, education, certifications }: { projects?: any[], yearsOfExperience?: string | null, education?: any[], certifications?: any[] }) {
     const defaultEducation = PROFILE.education || [];
     const displayEducation = education || defaultEducation;
 
@@ -41,30 +41,38 @@ export function Projects({ projects, yearsOfExperience, education }: { projects?
                             </div>
                         )}
 
-                        <div className="flex bg-secondary/30 p-1.5 rounded-xl border border-border backdrop-blur-sm">
+                        <div className="flex bg-secondary/30 p-1.5 rounded-xl border border-border backdrop-blur-sm relative">
+                            {/* Pulsating Filter Buttons */}
                             <button
                                 onClick={() => setFilter('public')}
                                 className={cn(
-                                    "flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 text-xs font-bold tracking-wider uppercase",
+                                    "relative z-10 flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 text-xs font-bold tracking-wider uppercase cursor-pointer",
                                     filter === 'public'
-                                        ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                                        ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,211,238,0.5)]"
                                         : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
+                                {filter === 'public' && (
+                                    <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 opacity-75 blur-sm animate-pulse -z-10"></span>
+                                )}
                                 Públicos
                                 <span className={cn("px-2 py-0.5 rounded-full text-[10px]", filter === 'public' ? "bg-black/20" : "bg-card/50")}>
                                     {publicProjects.length}
                                 </span>
                             </button>
+
                             <button
                                 onClick={() => setFilter('private')}
                                 className={cn(
-                                    "flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 text-xs font-bold tracking-wider uppercase",
+                                    "relative z-10 flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 text-xs font-bold tracking-wider uppercase cursor-pointer",
                                     filter === 'private'
-                                        ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                                        ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,211,238,0.5)]"
                                         : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
+                                {filter === 'private' && (
+                                    <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-600 opacity-75 blur-sm animate-pulse -z-10"></span>
+                                )}
                                 Privados
                                 <span className={cn("px-2 py-0.5 rounded-full text-[10px]", filter === 'private' ? "bg-black/20" : "bg-card/50")}>
                                     {privateProjects.length}
@@ -191,12 +199,40 @@ export function Projects({ projects, yearsOfExperience, education }: { projects?
                         </div>
                     </div>
                 )}
+                {/* CERTIFICATIONS SECTION (New) */}
+                {certifications && certifications.length > 0 && (
+                    <div className="mt-16 pt-12 border-t border-white/5">
+                        <div className="flex items-end justify-between mb-8">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-2">Asistencias a Cursos</h2>
+                                <p className="text-muted-foreground text-sm">Formación continua y actualización tecnológica.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {certifications.map((cert: any, i: number) => (
+                                <div key={i} className="p-4 rounded-xl bg-secondary/5 border border-white/5 hover:bg-secondary/10 transition-colors flex flex-col gap-2">
+                                    <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+                                        <span className="flex items-center gap-1.5 text-primary">
+                                            <Calendar className="w-3 h-3" />
+                                            {cert.date}
+                                        </span>
+                                        <span>{cert.provider}</span>
+                                    </div>
+                                    <h3 className="font-bold text-sm text-foreground leading-tight">
+                                        {cert.title}
+                                    </h3>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     );
 }
 
 // Helper icons
-import { GraduationCap, Calendar } from "lucide-react";
+import { GraduationCap, Calendar, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";

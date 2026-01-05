@@ -119,6 +119,7 @@ export default async function ProfileDetailsPage({ params }: { params: Promise<{
                     projects={profile.projects}
                     yearsOfExperience={yearsOfExp}
                     education={profile.education}
+                    certifications={profile.certifications}
                 />
                 <LandingStack stack={stack} />
                 <LandingFooter profile={profile} />

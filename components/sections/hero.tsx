@@ -45,9 +45,9 @@ export function Hero({ profile }: { profile?: any }) {
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight text-white">
-                        {profile ? "Unlocking" : "Architecting"} <br />
+                        {profile?.firstName || (profile ? "Unlocking" : "Architecting")} <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                            Digital Resilience
+                            {profile?.lastName || "Digital Resilience"}
                         </span>
                     </h1>
 

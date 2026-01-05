@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { updateProfile } from '@/lib/actions'
-import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap } from 'lucide-react'
+import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+// ... (imports remain)
 
 const TECH_SPECIALTIES = [
     { id: '1', title: 'Arquitecturas Escalables', description: 'Diseño de sistemas distribuidos capaces de manejar alta concurrencia.', icon: Briefcase },
@@ -13,6 +15,9 @@ const TECH_SPECIALTIES = [
     { id: '5', title: 'Mobile & Offline', description: 'Apps que funcionan sin conexión en entornos remotos.', icon: Smartphone },
     { id: '6', title: 'Liderazgo Técnico', description: 'Gestión de equipos bajo metodologías ágiles (Scrum).', icon: Users },
 ]
+
+
+
 
 const TECH_STACK_CATEGORIES = {
     "Backend & Arquitectura": [
@@ -60,6 +65,11 @@ export function EditProfileModal({ profile }: { profile: any }) {
     // --- STATE MANAGEMENT ---
     const [industry, setIndustry] = useState(profile.industry || 'Tech')
 
+    // Collapsible States
+    const [showEduList, setShowEduList] = useState(true)
+    const [showCertList, setShowCertList] = useState(true)
+    const [showProjList, setShowProjList] = useState(true)
+
     // Stats State (initialize from attributes)
     const [statsValues, setStatsValues] = useState<Record<string, string>>({})
 
@@ -85,7 +95,8 @@ export function EditProfileModal({ profile }: { profile: any }) {
         outcome: '',
         tags: [] as string[],
         imageFile: null as File | null,
-        existingImageUrl: null as string | null
+        existingImageUrl: null as string | null,
+        url: '' as string // New URL field
     })
 
     // Education State
@@ -95,6 +106,15 @@ export function EditProfileModal({ profile }: { profile: any }) {
         degree: '',
         period: '',
         status: 'Completed'
+    })
+
+    // Certifications State
+    const [certifications, setCertifications] = useState<any[]>([])
+    const [currentCert, setCurrentCert] = useState({
+        title: '',
+        provider: '',
+        date: '',
+        url: ''
     })
 
     // Load initial data when modal opens
@@ -140,8 +160,9 @@ export function EditProfileModal({ profile }: { profile: any }) {
                     desc: p.description,
                     solution: p.solution,
                     outcome: p.outcome,
-                    tags: p.tags.map((t: any) => t.name),
-                    existingImageUrl: p.imageUrl
+                    tags: p.tags ? p.tags.map((t: any) => t.name) : [],
+                    existingImageUrl: p.imageUrl,
+                    url: p.url || ''
                 }))
                 setProjects(loadedProjects)
             }
@@ -153,6 +174,16 @@ export function EditProfileModal({ profile }: { profile: any }) {
                     degree: edu.degree,
                     period: edu.period,
                     status: edu.status
+                })))
+            }
+
+            // Load Certifications
+            if (profile.certifications) {
+                setCertifications(profile.certifications.map((cert: any) => ({
+                    title: cert.title,
+                    provider: cert.provider,
+                    date: cert.date ? String(cert.date) : '',
+                    url: cert.url || ''
                 })))
             }
         }
@@ -198,11 +229,17 @@ export function EditProfileModal({ profile }: { profile: any }) {
         if (!currentProject.title) return;
         setProjects([...projects, { ...currentProject }])
         setCurrentProject({
-            title: '', client: '', type: 'Laboral', desc: '', solution: '', outcome: '', tags: [], imageFile: null, existingImageUrl: null
+            title: '', client: '', type: 'Laboral', desc: '', solution: '', outcome: '', tags: [], imageFile: null, existingImageUrl: null, url: ''
         })
+        setShowProjList(true)
     }
     const removeProject = (index: number) => {
         setProjects(projects.filter((_, i) => i !== index))
+    }
+    const editProject = (index: number) => {
+        const itemToEdit = projects[index]
+        setCurrentProject(itemToEdit)
+        removeProject(index)
     }
     const toggleTech = (tech: string) => {
         setCurrentProject(prev => {
@@ -218,14 +255,36 @@ export function EditProfileModal({ profile }: { profile: any }) {
         if (!currentEdu.institution || !currentEdu.degree) return;
         setEducation([...education, { ...currentEdu }])
         setCurrentEdu({ institution: '', degree: '', period: '', status: 'Completed' })
+        setShowEduList(true)
     }
     const removeEducation = (index: number) => {
         setEducation(education.filter((_, i) => i !== index))
     }
+    const editEducation = (index: number) => {
+        const itemToEdit = education[index]
+        setCurrentEdu(itemToEdit)
+        removeEducation(index)
+    }
+
+    // Certifications Logic
+    const handleAddCertification = () => {
+        if (!currentCert.title || !currentCert.provider) return;
+        setCertifications([...certifications, { ...currentCert }])
+        setCurrentCert({ title: '', provider: '', date: '', url: '' })
+        setShowCertList(true)
+    }
+    const removeCertification = (index: number) => {
+        setCertifications(certifications.filter((_, i) => i !== index))
+    }
+    const editCertification = (index: number) => {
+        const itemToEdit = certifications[index]
+        setCurrentCert(itemToEdit)
+        removeCertification(index)
+    }
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
-        const maxStep = industry === 'Tech' ? 6 : 2;
+        const maxStep = industry === 'Tech' ? 7 : 2;
         if (step < maxStep) setStep(step + 1);
     }
 
@@ -248,6 +307,13 @@ export function EditProfileModal({ profile }: { profile: any }) {
         }
         formData.append('education_data', JSON.stringify(finalEducation))
 
+        // Inject Certifications
+        let finalCertifications = [...certifications]
+        if (currentCert.title) {
+            finalCertifications.push(currentCert)
+        }
+        formData.append('certifications_data', JSON.stringify(finalCertifications))
+
         // Inject Projects
         formData.append('projects_data', JSON.stringify(projects.map(p => ({
             title: p.title,
@@ -257,7 +323,8 @@ export function EditProfileModal({ profile }: { profile: any }) {
             solution: p.solution,
             outcome: p.outcome,
             tags: p.tags,
-            existingImageUrl: p.existingImageUrl
+            existingImageUrl: p.existingImageUrl,
+            url: p.url
         }))))
 
         projects.forEach((p, index) => {
@@ -275,320 +342,530 @@ export function EditProfileModal({ profile }: { profile: any }) {
         }
     }
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        if (isOpen) setMounted(true);
+    }, [isOpen]);
+
     if (!isOpen) {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="w-full py-2 px-4 rounded-lg font-medium text-center transition-colors mb-2 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 bg-slate-900 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all font-medium group mb-2 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
             >
-                <Pencil size={14} />
-                <span>Edit Profile</span>
+                <Pencil size={14} className="group-hover:rotate-12 transition-transform" />
+                <span>Edit Identity</span>
             </button>
         )
     }
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-left">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 h-auto max-h-[90vh] overflow-y-auto">
+    if (!mounted) return null;
 
-                <div className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center sticky top-0 bg-slate-50 z-10">
-                    <h2 className="text-xl font-bold text-slate-800">
-                        {step === 1 && 'Edit Basic Info'}
-                        {step === 2 && 'Edit Key Stats'}
-                        {step === 3 && 'Edit Specialties'}
-                        {step === 4 && 'Arsenal Tecnológico'}
-                        {step === 5 && 'Historial Académico'}
-                        {step === 6 && 'Edit Projects'}
-                    </h2>
-                    <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
-                        <X size={20} />
+    return createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setIsOpen(false)} />
+
+            {/* Modal Container */}
+            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 h-auto max-h-[95vh] flex flex-col relative z-20">
+
+                {/* Header */}
+                <div className="bg-slate-950/60 px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center sticky top-0 z-30 backdrop-blur-sm">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                            <Pencil size={20} className="text-cyan-500" />
+                            {step === 1 && 'Edit Basic Identity'}
+                            {step === 2 && 'Excellence Metrics'}
+                            {step === 3 && 'Core Ecosystem'}
+                            {step === 4 && 'Arsenal Tecnológico'}
+                            {step === 5 && 'Academic Foundation'}
+                            {step === 6 && 'Cursos y Certificaciones'}
+                            {step === 7 && 'Project Portfolio'}
+                        </h2>
+                        <p className="text-[10px] text-cyan-500 font-mono uppercase tracking-[0.2em] mt-1 opacity-70">Configuration // Phase.{step < 10 ? `0${step}` : step} // Mode.Update</p>
+                    </div>
+                    <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
+                        <X size={24} />
                     </button>
                 </div>
 
-                <form onSubmit={onSubmit} className="p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle">
+                    <form onSubmit={onSubmit} className="space-y-10">
 
-                    {/* STEP 1: BASIC INFO */}
-                    <div className={step === 1 ? 'block space-y-4' : 'hidden'}>
-                        <div className="grid grid-cols-2 gap-4">
-                            <label className="cursor-pointer">
-                                <input type="radio" name="industry" value="Tech" className="peer sr-only" checked={industry === 'Tech'} onChange={() => setIndustry('Tech')} />
-                                <div className="border-2 border-slate-100 peer-checked:border-cyan-500 peer-checked:bg-cyan-50 rounded-lg p-4 text-center transition-all hover:bg-slate-50">
-                                    <Server className="mx-auto mb-2 text-slate-400 peer-checked:text-cyan-600" />
-                                    <span className="block font-medium text-slate-600 peer-checked:text-cyan-900">Technology</span>
-                                </div>
-                            </label>
-                            <label className="cursor-pointer">
-                                <input type="radio" name="industry" value="Legal" className="peer sr-only" checked={industry === 'Legal'} onChange={() => setIndustry('Legal')} />
-                                <div className="border-2 border-slate-100 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 rounded-lg p-4 text-center transition-all hover:bg-slate-50">
-                                    <Scale className="mx-auto mb-2 text-slate-400 peer-checked:text-indigo-600" />
-                                    <span className="block font-medium text-slate-600 peer-checked:text-indigo-900">Legal</span>
-                                </div>
-                            </label>
-                        </div>
 
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label><input name="name" defaultValue={profile.name} required className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none" /></div>
-                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Headline</label><input name="headline" defaultValue={profile.headline} required className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none" /></div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-medium text-slate-700 mb-1">Email</label><input name="email" defaultValue={profile.email} required className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none" /></div>
-                                <div><label className="block text-sm font-medium text-slate-700 mb-1">Phone</label><input name="phone" defaultValue={profile.phone} required className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none" /></div>
+                        {/* STEP 1: BASIC INFO */}
+                        <div className={step === 1 ? 'block space-y-8' : 'hidden'}>
+                            <div className="grid grid-cols-2 gap-6">
+                                <label className="cursor-pointer group">
+                                    <input type="radio" name="industry" value="Tech" className="peer sr-only" checked={industry === 'Tech'} onChange={() => setIndustry('Tech')} />
+                                    <div className="border border-white/10 group-hover:border-cyan-500/50 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 rounded-2xl p-6 text-center transition-all bg-slate-950/40 backdrop-blur-sm">
+                                        <Server size={32} className="mx-auto mb-3 text-slate-500 peer-checked:text-cyan-400 group-hover:scale-110 transition-transform" />
+                                        <span className="block font-bold text-slate-400 peer-checked:text-white uppercase tracking-widest text-xs">Technology</span>
+                                    </div>
+                                </label>
+                                <label className="cursor-pointer group">
+                                    <input type="radio" name="industry" value="Legal" className="peer sr-only" checked={industry === 'Legal'} onChange={() => setIndustry('Legal')} />
+                                    <div className="border border-white/10 group-hover:border-indigo-500/50 peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 rounded-2xl p-6 text-center transition-all bg-slate-950/40 backdrop-blur-sm">
+                                        <Scale size={32} className="mx-auto mb-3 text-slate-500 peer-checked:text-indigo-400 group-hover:scale-110 transition-transform" />
+                                        <span className="block font-bold text-slate-400 peer-checked:text-white uppercase tracking-widest text-xs">Legal Services</span>
+                                    </div>
+                                </label>
                             </div>
-                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Location</label><input name="location" defaultValue={profile.location} required className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none" /></div>
-                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Bio</label><textarea name="bio" defaultValue={profile.bio} rows={3} required className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none resize-none" /></div>
-                        </div>
 
-                        {/* Social Links Sub-section */}
-                        <div className="space-y-4 pt-4 border-t border-slate-100">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                                <Link2 size={16} className="text-cyan-500" />
-                                Redes Sociales
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase">LinkedIn</label>
-                                    <input name="social_linkedin" defaultValue={getSocialUrl('LinkedIn')} className="w-full px-3 py-2 rounded border border-slate-200 text-xs outline-none focus:border-cyan-500" placeholder="https://linkedin.com/in/..." />
+                            <div className="space-y-4 text-slate-900">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Nombre</label><input name="firstName" defaultValue={profile.firstName} placeholder="Ej: Unlocking" className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
+                                    <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Apellido</label><input name="lastName" defaultValue={profile.lastName} placeholder="Ej: Digital Resilience" className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase">GitHub</label>
-                                    <input name="social_github" defaultValue={getSocialUrl('GitHub')} className="w-full px-3 py-2 rounded border border-slate-200 text-xs outline-none focus:border-cyan-500" placeholder="https://github.com/..." />
+                                <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Full Name</label><input name="name" defaultValue={profile.name} required className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
+                                <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Headline</label><input name="headline" defaultValue={profile.headline} required className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Email</label><input name="email" defaultValue={profile.email} required className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
+                                    <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Phone</label><input name="phone" defaultValue={profile.phone} required className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase">YouTube</label>
-                                    <input name="social_youtube" defaultValue={getSocialUrl('YouTube')} className="w-full px-3 py-2 rounded border border-slate-200 text-xs outline-none focus:border-cyan-500" placeholder="https://youtube.com/@..." />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase">Email (Social)</label>
-                                    <input name="social_email" defaultValue={getSocialUrl('Email')} className="w-full px-3 py-2 rounded border border-slate-200 text-xs outline-none focus:border-cyan-500" placeholder="ejemplo@correo.com" />
+                                <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Location</label><input name="location" defaultValue={profile.location} required className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
+                                <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Bio</label><textarea name="bio" defaultValue={profile.bio} rows={4} required className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all resize-none text-white placeholder:text-slate-600 text-sm" /></div>
+                            </div>
+
+                            {/* Social Links Sub-section */}
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                                    <Link2 size={16} className="text-cyan-500" />
+                                    Redes Sociales
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">LinkedIn</label>
+                                        <input name="social_linkedin" defaultValue={getSocialUrl('LinkedIn')} className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="https://linkedin.com/in/..." />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">GitHub</label>
+                                        <input name="social_github" defaultValue={getSocialUrl('GitHub')} className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="https://github.com/..." />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">YouTube</label>
+                                        <input name="social_youtube" defaultValue={getSocialUrl('YouTube')} className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="https://youtube.com/@..." />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">Email (Social)</label>
+                                        <input name="social_email" defaultValue={getSocialUrl('Email')} className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="ejemplo@correo.com" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* STEP 2: STATS */}
-                    <div className={step === 2 ? 'block space-y-6' : 'hidden'}>
-                        <div className="grid grid-cols-2 gap-4">
-                            {(industry === 'Tech' ? STATS_CONFIG.Tech : STATS_CONFIG.Legal).map((stat) => (
-                                <div key={stat.name}>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{stat.label}</label>
-                                    <input
-                                        name={`stat_${stat.name}`}
-                                        defaultValue={getStatValue(stat.name)}
-                                        required
-                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-slate-900 outline-none"
-                                        placeholder={stat.placeholder}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* STEP 3: SPECIALTIES */}
-                    <div className={step === 3 ? 'block' : 'hidden'}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {TECH_SPECIALTIES.map((spec) => {
-                                const Icon = spec.icon
-                                const val = `${spec.title}|${spec.description}`
-                                const isChecked = selectedSpecialties.includes(val)
-                                return (
-                                    <label key={spec.id} className="cursor-pointer relative group">
+                        {/* STEP 2: STATS */}
+                        <div className={step === 2 ? 'block space-y-6' : 'hidden'}>
+                            <div className="grid grid-cols-2 gap-4">
+                                {(industry === 'Tech' ? STATS_CONFIG.Tech : STATS_CONFIG.Legal).map((stat) => (
+                                    <div key={stat.name}>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">{stat.label}</label>
                                         <input
-                                            type="checkbox"
-                                            name="specialties_control"
-                                            value={val}
-                                            className="peer sr-only"
-                                            checked={isChecked}
-                                            onChange={() => handleSpecialtyChange(val)}
+                                            name={`stat_${stat.name}`}
+                                            defaultValue={getStatValue(stat.name)}
+                                            required
+                                            className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm"
+                                            placeholder={stat.placeholder}
                                         />
-                                        <div className={`h-full border rounded-lg p-4 transition-all ${isChecked ? 'bg-cyan-900 border-cyan-500 text-white' : 'border-slate-200 hover:border-cyan-500 hover:bg-cyan-50/10'}`}>
-                                            <div className="flex items-start gap-3">
-                                                <div className={`p-2 rounded ${isChecked ? 'bg-cyan-500 text-black' : 'bg-slate-100 text-slate-600'}`}>
-                                                    <Icon size={20} />
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-sm mb-1">{spec.title}</div>
-                                                    <div className="text-xs opacity-70 leading-relaxed">{spec.description}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* STEP 3: SPECIALTIES */}
+                        <div className={step === 3 ? 'block' : 'hidden'}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {TECH_SPECIALTIES.map((spec) => {
+                                    const Icon = spec.icon
+                                    const val = `${spec.title}|${spec.description}`
+                                    const isChecked = selectedSpecialties.includes(val)
+                                    return (
+                                        <label key={spec.id} className="cursor-pointer relative group">
+                                            <input
+                                                type="checkbox"
+                                                name="specialties_control"
+                                                value={val}
+                                                className="peer sr-only"
+                                                checked={isChecked}
+                                                onChange={() => handleSpecialtyChange(val)}
+                                            />
+                                            <div className={`h-full border rounded-lg p-4 transition-all ${isChecked ? 'bg-cyan-900 border-cyan-500 text-white' : 'border-slate-200 hover:border-cyan-500 hover:bg-cyan-50/10'}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`p-2 rounded ${isChecked ? 'bg-cyan-500 text-black' : 'bg-slate-100 text-slate-600'}`}>
+                                                        <Icon size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-sm mb-1">{spec.title}</div>
+                                                        <div className="text-xs opacity-70 leading-relaxed">{spec.description}</div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </label>
-                                )
-                            })}
+                                        </label>
+                                    )
+                                })}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* STEP 4: TECH STACK (New) */}
-                    <div className={step === 4 ? 'block' : 'hidden'}>
-                        <div className="grid grid-cols-2 gap-6">
-                            {Object.entries(TECH_STACK_CATEGORIES).map(([catName, items]) => (
-                                <div key={catName}>
-                                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-l-4 border-cyan-500 pl-3 mb-4">{catName}</h4>
-                                    <div className="space-y-2">
-                                        {items.map(item => (
-                                            <label key={item} className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500' : 'bg-white group-hover:border-cyan-400'}`}>
-                                                    {selectedStack[catName]?.includes(item) && <CheckCircle2 size={14} className="text-white" />}
-                                                </div>
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only"
-                                                    checked={selectedStack[catName]?.includes(item)}
-                                                    onChange={() => toggleStackItem(catName, item)}
-                                                />
-                                                <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>{item}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* STEP 5: EDUCATION */}
-                    <div className={step === 5 ? 'block space-y-6' : 'hidden'}>
-                        {education.length > 0 && (
-                            <div className="space-y-3 mb-6">
-                                <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Registros Agregados ({education.length})</h4>
-                                {education.map((edu, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded border border-slate-200">
-                                        <div>
-                                            <div className="font-bold text-slate-800 text-sm">{edu.institution}</div>
-                                            <div className="text-xs text-slate-500">{edu.degree} • {edu.period}</div>
+                        {/* STEP 4: TECH STACK (New) */}
+                        <div className={step === 4 ? 'block' : 'hidden'}>
+                            <div className="grid grid-cols-2 gap-6">
+                                {Object.entries(TECH_STACK_CATEGORIES).map(([catName, items]) => (
+                                    <div key={catName}>
+                                        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-l-4 border-cyan-500 pl-3 mb-4">{catName}</h4>
+                                        <div className="space-y-2">
+                                            {items.map(item => (
+                                                <label key={item} className="flex items-center gap-3 cursor-pointer group">
+                                                    <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500' : 'bg-white group-hover:border-cyan-400'}`}>
+                                                        {selectedStack[catName]?.includes(item) && <CheckCircle2 size={14} className="text-white" />}
+                                                    </div>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only"
+                                                        checked={selectedStack[catName]?.includes(item)}
+                                                        onChange={() => toggleStackItem(catName, item)}
+                                                    />
+                                                    <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>{item}</span>
+                                                </label>
+                                            ))}
                                         </div>
-                                        <button type="button" onClick={() => removeEducation(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
                                     </div>
                                 ))}
                             </div>
-                        )}
-
-                        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                            <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                                <GraduationCap size={18} className="text-cyan-500" />
-                                {education.length > 0 ? 'Agregar otra formación' : 'Registrar educación'}
-                            </h3>
-
-                            <div className="grid grid-cols-1 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Institución</label>
-                                    <input value={currentEdu.institution} onChange={(e) => setCurrentEdu({ ...currentEdu, institution: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" placeholder="Ej: UMA - Universidad María Auxiliadora" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Título / Especialidad</label>
-                                    <input value={currentEdu.degree} onChange={(e) => setCurrentEdu({ ...currentEdu, degree: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" placeholder="Ej: Ingeniería de Inteligencia Artificial" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Periodo</label>
-                                        <input value={currentEdu.period} onChange={(e) => setCurrentEdu({ ...currentEdu, period: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" placeholder="Ej: 2024 - Actualidad" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Estado</label>
-                                        <select value={currentEdu.status} onChange={(e) => setCurrentEdu({ ...currentEdu, status: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm bg-white">
-                                            <option value="Completed">Completado</option>
-                                            <option value="In Progress">En Curso</option>
-                                            <option value="Truncated">Técnico/Otros</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" onClick={handleAddEducation} className="w-full py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors text-sm">+ Agregar a la lista</button>
                         </div>
-                    </div>
 
-                    {/* STEP 6: PROJECTS */}
-                    <div className={step === 6 ? 'block space-y-6' : 'hidden'}>
-
-                        {projects.length > 0 && (
-                            <div className="space-y-3 mb-6">
-                                <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Existing Projects ({projects.length})</h4>
-                                {projects.map((p, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded border border-slate-200">
-                                        <div>
-                                            <div className="font-bold text-slate-800 text-sm">{p.title}</div>
-                                            <div className="text-xs text-slate-500">{p.client || 'Personal'} • {p.tags.length} techs</div>
-                                        </div>
-                                        <button type="button" onClick={() => removeProject(idx)} className="text-red-400 hover:text-red-600">
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Plus size={18} className="text-cyan-500" /> Add / Replace Project
-                            </h3>
-
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <select
-                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm bg-white"
-                                        value={currentProject.type}
-                                        onChange={(e) => setCurrentProject({ ...currentProject, type: e.target.value })}
+                        {/* STEP 5: EDUCATION */}
+                        <div className={step === 5 ? 'block space-y-6' : 'hidden'}>
+                            {education.length > 0 ? (
+                                <div className="space-y-3 mb-6">
+                                    <div
+                                        className="flex items-center justify-between cursor-pointer group"
+                                        onClick={() => setShowEduList(!showEduList)}
                                     >
-                                        <option value="Laboral">Corporate Info</option>
-                                        <option value="Personal">Personal Project</option>
-                                    </select>
+                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Added Records ({education.length})</h4>
+                                        {showEduList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
+                                    </div>
 
-                                    <input value={currentProject.title} onChange={(e) => setCurrentProject({ ...currentProject, title: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" placeholder="Title" />
+                                    {showEduList && education.map((edu, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+                                            <div>
+                                                <div className="font-bold text-white text-sm">{edu.institution}</div>
+                                                <div className="text-xs text-slate-500 font-mono">{edu.degree} • {edu.period}</div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                    <Pencil size={16} />
+                                                </button>
+                                                <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-
-                                <textarea value={currentProject.desc} onChange={(e) => setCurrentProject({ ...currentProject, desc: e.target.value })} rows={2} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none resize-none text-sm" placeholder="Challenge..." />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none resize-none text-sm" placeholder="Solution..." />
-                                    <textarea value={currentProject.outcome} onChange={(e) => setCurrentProject({ ...currentProject, outcome: e.target.value })} rows={2} className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none resize-none text-sm" placeholder="Outcome..." />
+                            ) : (
+                                <div className="text-center py-10 bg-slate-950/20 rounded-2xl border border-dashed border-white/10 mb-6">
+                                    <p className="text-slate-500 text-xs font-mono uppercase tracking-widest">No matching records found in local stack.</p>
                                 </div>
+                            )}
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Technologies</label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 h-32 overflow-y-auto border rounded p-2 custom-scrollbar">
-                                        {TECH_OPTIONS.map(tech => (
-                                            <label key={tech} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
-                                                <input type="checkbox" checked={currentProject.tags.includes(tech)} onChange={() => toggleTech(tech)} className="rounded border-slate-300" />
-                                                <span className="text-xs text-slate-700">{tech}</span>
-                                            </label>
-                                        ))}
+                            <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
+                                <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+                                    <GraduationCap size={18} className="text-cyan-500" />
+                                    {education.length > 0 ? 'Agregar otra formación' : 'Registrar educación'}
+                                </h3>
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Institución <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={currentEdu.institution}
+                                            onChange={(e) => setCurrentEdu({ ...currentEdu, institution: e.target.value })}
+                                            className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentEdu.institution && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
+                                            placeholder="Ej: UMA - Universidad María Auxiliadora"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Título / Especialidad <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={currentEdu.degree}
+                                            onChange={(e) => setCurrentEdu({ ...currentEdu, degree: e.target.value })}
+                                            className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentEdu.degree && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
+                                            placeholder="Ej: Ingeniería de Inteligencia Artificial"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Periodo</label>
+                                            <input
+                                                value={currentEdu.period}
+                                                onChange={(e) => setCurrentEdu({ ...currentEdu, period: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
+                                                placeholder="Ej: 2024 - Actualidad"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Estado</label>
+                                            <select
+                                                value={currentEdu.status}
+                                                onChange={(e) => setCurrentEdu({ ...currentEdu, status: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white bg-slate-950"
+                                            >
+                                                <option value="Completed">Completado</option>
+                                                <option value="In Progress">En Curso</option>
+                                                <option value="Truncated">Técnico/Otros</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center cursor-pointer relative">
-                                    <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => { if (e.target.files?.[0]) setCurrentProject({ ...currentProject, imageFile: e.target.files[0] }) }} />
-                                    <div className="flex flex-col items-center">
-                                        {currentProject.imageFile ? (
-                                            <span className="text-xs text-green-700 font-medium flex items-center gap-1"><CheckCircle2 size={16} /> {currentProject.imageFile.name}</span>
-                                        ) : (
-                                            <span className="text-xs text-slate-500 flex items-center gap-1"><ImageIcon size={16} /> Upload Image</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <button type="button" onClick={handleAddProject} className="w-full py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors text-sm">
-                                    + Add to List
+                                <button
+                                    type="button"
+                                    onClick={handleAddEducation}
+                                    disabled={!currentEdu.institution || !currentEdu.degree}
+                                    className={`w-full py-3 font-bold rounded-xl transition-all text-sm border ${(!currentEdu.institution || !currentEdu.degree) ? 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20'}`}
+                                >
+                                    + Agregar a la lista
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="pt-4 flex justify-between gap-3 border-t border-slate-100 mt-6 sticky bottom-0 bg-white">
-                        {step > 1 ? (
-                            <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Back</button>
-                        ) : (
-                            <button type="button" onClick={() => setIsOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                        )}
+                        <div className={step === 6 ? 'block space-y-6' : 'hidden'}>
+                            {certifications.length > 0 ? (
+                                <div className="space-y-3 mb-6">
+                                    <div
+                                        className="flex items-center justify-between cursor-pointer group"
+                                        onClick={() => setShowCertList(!showCertList)}
+                                    >
+                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Added Knowledge ({certifications.length})</h4>
+                                        {showCertList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
+                                    </div>
 
-                        {(industry === 'Tech' && step === 6) || (industry === 'Legal' && step === 2) ? (
-                            <button type="submit" disabled={isPending} className="bg-slate-900 text-white px-8 py-2 rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 ml-auto">
-                                {isPending ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        ) : (
-                            <button type="button" onClick={handleNext} className="bg-slate-900 text-white px-8 py-2 rounded-lg font-medium hover:bg-slate-800 ml-auto">
-                                Next
-                            </button>
-                        )}
-                    </div>
+                                    {showCertList && certifications.map((cert, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+                                            <div>
+                                                <div className="font-bold text-white text-sm">{cert.title}</div>
+                                                <div className="text-xs text-slate-500 font-mono">{cert.provider} • {cert.date}</div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                    <Pencil size={16} />
+                                                </button>
+                                                <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10 bg-slate-950/20 rounded-2xl border border-dashed border-white/10 mb-6">
+                                    <p className="text-slate-500 text-xs font-mono uppercase tracking-widest">No certifications detected in database.</p>
+                                </div>
+                            )}
 
-                </form>
+                            <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-6">
+                                <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+                                    <Award size={18} className="text-cyan-500" />
+                                    {certifications.length > 0 ? 'Inject Another Node' : 'Initialize Certification'}
+                                </h3>
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Nombre del Curso <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={currentCert.title}
+                                            onChange={(e) => setCurrentCert({ ...currentCert, title: e.target.value })}
+                                            className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentCert.title && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
+                                            placeholder="Ej: How to Build a Full Stack Application"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Proveedor <span className="text-red-500">*</span></label>
+                                            <input
+                                                value={currentCert.provider}
+                                                onChange={(e) => setCurrentCert({ ...currentCert, provider: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
+                                                placeholder="Ej: freecodecamp"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Fecha</label>
+                                            <input
+                                                value={currentCert.date}
+                                                onChange={(e) => setCurrentCert({ ...currentCert, date: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
+                                                placeholder="Ej: 09/02/2025"
+                                            />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">URL (Opcional)</label>
+                                            <input
+                                                value={currentCert.url}
+                                                onChange={(e) => setCurrentCert({ ...currentCert, url: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
+                                                placeholder="https://..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAddCertification}
+                                    disabled={!currentCert.title || !currentCert.provider}
+                                    className={`w-full py-3 font-bold rounded-xl transition-all text-sm border ${(!currentCert.title || !currentCert.provider) ? 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20'}`}
+                                >
+                                    + Inject into Stack
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={step === 7 ? 'block space-y-6' : 'hidden'}>
+                            {projects.length > 0 && (
+                                <div className="space-y-3 mb-6">
+                                    <div
+                                        className="flex items-center justify-between cursor-pointer group"
+                                        onClick={() => setShowProjList(!showProjList)}
+                                    >
+                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Active Operations ({projects.length})</h4>
+                                        {showProjList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
+                                    </div>
+
+                                    {showProjList && projects.map((p, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+                                            <div>
+                                                <div className="font-bold text-white text-sm">{p.title}</div>
+                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} active technologies</div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                    <Pencil size={16} />
+                                                </button>
+                                                <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 shadow-2xl space-y-8 relative overflow-hidden group/modal">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover/modal:bg-cyan-500/10 transition-colors" />
+
+                                <h3 className="font-bold text-white mb-2 flex items-center gap-3 relative z-10">
+                                    <Plus size={20} className="text-cyan-500" />
+                                    <span className="tracking-tight">Add / Synchronize Project</span>
+                                </h3>
+
+                                <div className="space-y-6 relative z-10">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Domain</label>
+                                            <select
+                                                className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white focus:border-cyan-500 transition-all cursor-pointer"
+                                                value={currentProject.type}
+                                                onChange={(e) => setCurrentProject({ ...currentProject, type: e.target.value })}
+                                            >
+                                                <option value="Laboral">Corporate Info</option>
+                                                <option value="Personal">Personal Project</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Identity</label>
+                                            <input
+                                                value={currentProject.title}
+                                                onChange={(e) => setCurrentProject({ ...currentProject, title: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
+                                                placeholder="Project Title"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Challenge Matrix</label>
+                                        <textarea value={currentProject.desc} onChange={(e) => setCurrentProject({ ...currentProject, desc: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Describe the mission challenge..." />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Engineered Solution</label>
+                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Core architecture details..." />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Calculated Outcome</label>
+                                            <textarea value={currentProject.outcome} onChange={(e) => setCurrentProject({ ...currentProject, outcome: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Impact and results..." />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Live Endpoint (Optional)</label>
+                                        <input value={currentProject.url} onChange={(e) => setCurrentProject({ ...currentProject, url: e.target.value })} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all" placeholder="https://external-link.com" />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest ml-1">Tech Substack</label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-40 overflow-y-auto border border-white/5 rounded-2xl p-4 bg-slate-950/40 custom-scrollbar shadow-inner">
+                                            {TECH_OPTIONS.map(tech => (
+                                                <label key={tech} className="flex items-center gap-3 cursor-pointer group/item">
+                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${currentProject.tags.includes(tech) ? 'bg-cyan-500 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'border-white/20 group-hover/item:border-cyan-500/50'}`}>
+                                                        {currentProject.tags.includes(tech) && <CheckCircle2 size={10} className="text-black" />}
+                                                    </div>
+                                                    <input type="checkbox" checked={currentProject.tags.includes(tech)} onChange={() => toggleTech(tech)} className="sr-only" />
+                                                    <span className={`text-[11px] uppercase tracking-tighter ${currentProject.tags.includes(tech) ? 'text-white font-bold' : 'text-slate-500 group-hover/item:text-slate-300'}`}>{tech}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="border border-white/10 border-dashed rounded-2xl p-6 text-center cursor-pointer relative hover:bg-white/5 hover:border-cyan-500/30 transition-all group/upload">
+                                        <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onChange={(e) => { if (e.target.files?.[0]) setCurrentProject({ ...currentProject, imageFile: e.target.files[0] }) }} />
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="p-3 bg-white/5 rounded-full group-hover/upload:scale-110 transition-transform">
+                                                <ImageIcon size={24} className="text-slate-500 group-hover:text-cyan-400" />
+                                            </div>
+                                            {currentProject.imageFile ? (
+                                                <span className="text-xs text-cyan-400 font-mono flex items-center gap-2"><CheckCircle2 size={14} /> {currentProject.imageFile.name}</span>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Upload Visual Evidence</p>
+                                                    <p className="text-[10px] text-slate-500 font-mono">PNG, JPG up to 10MB</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleAddProject}
+                                        className="w-full py-4 bg-white text-black font-black uppercase tracking-[0.2em] rounded-xl hover:bg-cyan-400 transition-all shadow-xl active:scale-95"
+                                    >
+                                        + Deploy to Project List
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-8 flex justify-between gap-4 border-t border-white/5 mt-10 sticky bottom-0 bg-slate-900/95 backdrop-blur-sm p-4 z-40">
+                            {step > 1 ? (
+                                <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
+                            ) : (
+                                <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
+                            )}
+
+                            {(industry === 'Tech' && step === 7) || (industry === 'Legal' && step === 2) ? (
+                                <button type="submit" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                                    {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
+                                </button>
+                            ) : (
+                                <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">
+                                    Next
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+        </div >,
+        document.body
     )
 }

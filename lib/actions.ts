@@ -57,6 +57,8 @@ export async function getProfileById(id: string) {
 export async function createProfile(formData: FormData) {
     const rawData = {
         name: formData.get('name') as string,
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
         industry: formData.get('industry') as string,
         headline: formData.get('headline') as string,
         email: formData.get('email') as string,
@@ -162,6 +164,7 @@ export async function createProfile(formData: FormData) {
                 solution: p.solution || 'No solution details.',
                 outcome: p.outcome || 'Successful deployment.',
                 imageUrl: imageUrl,
+                url: p.url || '',
                 highlight: true,
                 tags: {
                     create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
@@ -197,6 +200,18 @@ export async function createProfile(formData: FormData) {
                 education: {
                     create: educationCreate
                 },
+                certifications: {
+                    create: (function () {
+                        const certsJson = formData.get('certifications_data') as string;
+                        const certsData = certsJson ? JSON.parse(certsJson) : [];
+                        return certsData.map((c: any) => ({
+                            title: c.title,
+                            provider: c.provider,
+                            date: c.date,
+                            url: c.url || ''
+                        }));
+                    })()
+                },
                 socials: {
                     create: socialLinks
                 }
@@ -213,6 +228,8 @@ export async function createProfile(formData: FormData) {
 export async function updateProfile(id: string, formData: FormData) {
     const rawData = {
         name: formData.get('name') as string,
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
         industry: formData.get('industry') as string,
         headline: formData.get('headline') as string,
         email: formData.get('email') as string,
@@ -352,6 +369,7 @@ export async function updateProfile(id: string, formData: FormData) {
                     solution: p.solution || 'No solution details.',
                     outcome: p.outcome || 'Successful deployment.',
                     imageUrl: imageUrl,
+                    url: p.url || '',
                     highlight: true,
                     tags: {
                         create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
@@ -374,6 +392,22 @@ export async function updateProfile(id: string, formData: FormData) {
 
         if (educationCreate.length > 0) {
             await db.education.createMany({ data: educationCreate })
+        }
+
+        // 7. Update Certifications (New)
+        await db.certification.deleteMany({ where: { profileId: id } })
+        const certificationsJson = formData.get('certifications_data') as string
+        const certificationsData = certificationsJson ? JSON.parse(certificationsJson) : []
+        const certificationsCreate = certificationsData.map((cert: any) => ({
+            profileId: id,
+            title: cert.title,
+            provider: cert.provider,
+            date: cert.date,
+            url: cert.url || ''
+        }))
+
+        if (certificationsCreate.length > 0) {
+            await db.certification.createMany({ data: certificationsCreate })
         }
 
         revalidatePath('/showcase')
