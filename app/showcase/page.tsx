@@ -1,18 +1,40 @@
-import { getShowcaseProfiles } from "@/lib/actions";
+"use client";
+
+import { useEffect, useState } from "react";
+import { getClientShowcaseProfiles } from "@/lib/api";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
 import { CreateProfileModal } from "@/components/CreateProfileModal";
 
-export const dynamic = 'force-dynamic';
+export default function ShowcasePage() {
+    const [profiles, setProfiles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-export default async function ShowcasePage() {
-    const profiles = await getShowcaseProfiles();
+    useEffect(() => {
+        const load = async () => {
+            const data = await getClientShowcaseProfiles();
+            setProfiles(data);
+            setLoading(false);
+        };
+        load();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white font-mono">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-primary animate-pulse uppercase tracking-[0.3em] text-xs">Initializing_System...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (profiles.length === 0) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white font-mono">
                 <div className="terminal-box p-8 rounded-xl max-w-md w-full text-center">
                     <h1 className="text-2xl font-bold mb-4 text-primary tracking-tighter">DATA_ERROR: NO_PROFILES_FOUND</h1>
-                    <p className="text-slate-400 text-sm">Please ensure the database is seeded or register a new professional profile.</p>
+                    <p className="text-slate-400 text-sm">Please ensure the backend is active or register a new professional profile.</p>
                 </div>
             </div>
         );

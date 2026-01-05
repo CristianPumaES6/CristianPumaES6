@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { updateProfile } from '@/lib/actions'
+import { updateClientProfile } from '@/lib/api'
 import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 // ... (imports remain)
@@ -333,7 +333,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
             }
         })
 
-        const res = await updateProfile(profile.id, formData)
+        const res = await updateClientProfile(profile.id, formData)
 
         setIsPending(false)
         if (res.success) {

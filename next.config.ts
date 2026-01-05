@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'export',
+  images: {
+    unoptimized: true,
+  },
+  /* 
+     GitHub Pages Subdirectory:
+     If your repo is https://github.com/user/procard, uncomment the following:
+     basePath: '/procard',
+  */
 };
 
 export default nextConfig;

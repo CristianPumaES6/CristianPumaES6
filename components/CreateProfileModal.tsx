@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { createProfile } from '@/lib/actions'
+import { createClientProfile } from '@/lib/api'
 import { X, UserPlus, Briefcase, Scale, Server, Link2, ShieldAlert, Database, Smartphone, Users, Globe, Building, FolderGit2, Image as ImageIcon, Plus, Trash2, CheckCircle2, GraduationCap, Award, Pencil } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -213,7 +213,7 @@ export function CreateProfileModal() {
             }
         })
 
-        const res = await createProfile(formData)
+        const res = await createClientProfile(formData)
 
         setIsPending(false)
         if (res.success) {
