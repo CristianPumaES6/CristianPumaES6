@@ -9998,3 +9998,75 @@ public/uploads/1767570004912-0-Cris-MJ.webp
 public/uploads/1767570024845-0-Cris-MJ.webp
 public/uploads/1767571124710-0-Cris-MJ.webp
 public/uploads/1767625108403-1-Captura_de_pantalla_2025-12-06_214854.png
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+/lib/generated/prisma
+app/favicon.ico
+app/globals.css
+app/layout.tsx
+app/page.tsx
+app/showcase/page.tsx
+app/showcase/\[id]/page.tsx
+app/showcase/\[id]/ProfileClientView.tsx
+components/CreateProfileModal.tsx
+components/EditProfileModal.tsx
+components/layout/footer.tsx
+components/layout/navbar.tsx
+components/sections/about.tsx
+components/sections/ActivityCounter.tsx
+components/sections/DuendeMaldito.tsx
+components/sections/FloatingCTA.tsx
+components/sections/hero.tsx
+components/sections/NexoHero.tsx
+components/sections/ProfessionalExperience.tsx
+components/sections/ProfileVitrina.tsx
+components/sections/projects.tsx
+components/sections/RoleSelector.tsx
+components/sections/stack.tsx
+components/ui/button.tsx
+components/ui/ShowcaseCard.tsx
+data/profile.ts
+lib/actions.ts
+lib/api.ts
+lib/db.ts
+lib/utils.ts
