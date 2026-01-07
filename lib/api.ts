@@ -4,7 +4,7 @@
  * an external backend API at runtime.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export async function getClientShowcaseProfiles() {
     try {

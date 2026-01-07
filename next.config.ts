@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // output: 'export', // Commented out to allow API routes to function locally
   images: {
     unoptimized: true,
   },
@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
      If your repo is https://github.com/user/procard, uncomment the following:
      basePath: '/procard',
   */
-  Subdirectory: '/proCard',
+  // Subdirectory: '/proCard', // Invalid config key
 };
 
 export default nextConfig;
