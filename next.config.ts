@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
      If your repo is https://github.com/user/procard, uncomment the following:
      basePath: '/procard',
   */
+  Subdirectory: '/proCard',
 };
 
 export default nextConfig;
