@@ -118,6 +118,7 @@ export async function createProfile(formData: FormData) {
         extractSocial('GitHub', 'Github')
         extractSocial('YouTube', 'Youtube')
         extractSocial('Email', 'Mail')
+        extractSocial('TikTok', 'Tiktok')
 
         // Prepare experiences (create Specialization items)
         const experienceCreates = specialties.map(spec => {
@@ -267,6 +268,7 @@ export async function updateProfile(id: string, formData: FormData) {
         extractSocial('GitHub', 'Github')
         extractSocial('YouTube', 'Youtube')
         extractSocial('Email', 'Mail')
+        extractSocial('TikTok', 'Tiktok')
 
         if (socialLinks.length > 0) {
             await db.social.createMany({ data: socialLinks })

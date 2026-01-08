@@ -53,7 +53,7 @@ const STATS_CONFIG = {
     ]
 }
 
-export function CreateProfileModal() {
+export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
     const [isOpen, setIsOpen] = useState(false)
     const [step, setStep] = useState(1)
     const [isPending, setIsPending] = useState(false)
@@ -234,6 +234,7 @@ export function CreateProfileModal() {
             setCurrentEdu({ institution: '', degree: '', period: '', status: 'Completed' })
             setCurrentCert({ title: '', provider: '', date: '' })
             router.refresh()
+            onSuccess?.()
         }
     }
 
@@ -278,7 +279,7 @@ export function CreateProfileModal() {
                 className="flex items-center gap-2 bg-cyan-500 text-black px-6 py-2.5 rounded-lg hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] font-bold group"
             >
                 <UserPlus size={18} className="group-hover:scale-110 transition-transform" />
-                <span>Register Professional</span>
+                <span>Registrar Perfil</span>
             </button>
         )
     }
@@ -371,6 +372,10 @@ export function CreateProfileModal() {
                                     <div className="space-y-1">
                                         <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">Email (Social)</label>
                                         <input name="social_email" className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="ejemplo@correo.com" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">TikTok</label>
+                                        <input name="social_tiktok" className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="https://tiktok.com/@..." />
                                     </div>
                                 </div>
                             </div>

@@ -9,13 +9,14 @@ export default function ShowcasePage() {
     const [profiles, setProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchProfiles = async () => {
+        const data = await getClientShowcaseProfiles();
+        setProfiles(data);
+        setLoading(false);
+    };
+
     useEffect(() => {
-        const load = async () => {
-            const data = await getClientShowcaseProfiles();
-            setProfiles(data);
-            setLoading(false);
-        };
-        load();
+        fetchProfiles();
     }, []);
 
     if (loading) {
@@ -51,7 +52,7 @@ export default function ShowcasePage() {
             <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto space-y-16">
                 <header className="relative pt-12 pb-8 px-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8">
-                        <CreateProfileModal />
+                        <CreateProfileModal onSuccess={fetchProfiles} />
                     </div>
 
                     <div className="max-w-3xl">

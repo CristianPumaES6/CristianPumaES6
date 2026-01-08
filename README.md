@@ -8,91 +8,91 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-cyan)
 ![Framer Motion](https://img.shields.io/badge/Motion-Framer-purple)
 
-## 🚀 Quick Start
+## 🚀 Guía de Instalación desde Cero
 
-### 1. Prerequisites
-- Node.js 18+ installed.
-- Git installed.
+Sigue esta guía si acabas de clonar el proyecto y no tienes ninguna base de datos configurada.
 
-### 2. Environment Setup
-Create a `.env` file in the root directory. You can copy the structure below:
-
+### 1. Clonar el repositorio
 ```bash
-# .env
-DATABASE_URL="file:./dev.db"
-NEXT_PUBLIC_API_URL="http://localhost:3000"
+git clone https://github.com/CristianPumaES6/proCard.git
+cd proCard
 ```
 
-### 3. Installation
-
-Install the project dependencies:
+### 2. Instalar dependencias
+Instala las librerías necesarias del proyecto:
 ```bash
 npm install
 ```
 
-### 4. Database Setup (Prisma + SQLite)
+### 3. Configurar Variables de Entorno
+Crea un archivo llamado `.env` en la raíz del proyecto (al lado de `package.json`).
+Copia y pega EXACTAMENTE el siguiente contenido:
 
-This project uses a local SQLite database using Prisma ORM.
+```bash
+# Archivo: .env
+# Configuración local de base de datos SQLite
+DATABASE_URL="file:./dev.db"
 
-1.  **Generate the Prisma Client**:
-    ```bash
-    npx prisma generate
-    ```
+# URL de la API (en local es localhost:3000)
+NEXT_PUBLIC_API_URL="http://localhost:3000"
+```
 
-2.  **Push the Schema to Database** (Creates/Updates tables):
-    ```bash
-    npx prisma db push
-    ```
+### 4. Inicializar la Base de Datos (IMPORTANTE)
+Como la base de datos no se sube a Git, debes crearla localmente. Ejecuta estos comandos **en orden** en tu terminal:
 
-3.  **Seed the Database** (Loads initial data):
-    ```bash
-    npx prisma db seed
-    ```
+**Paso A: Generar el cliente de Prisma**
+Esto crea los archivos necesarios para que el código entienda tu base de datos.
+```bash
+npx prisma generate
+```
 
-### 5. Run the Application
+**Paso B: Crear las tablas en la Base de Datos**
+Este comando crea el archivo `dev.db` y todas las tablas (Profile, Projects, etc.).
+```bash
+npx prisma db push
+```
+> *Nota: Si este comando falla diciendo que DATABASE_URL no existe, asegúrate de haber creado el archivo .env correctamente en el paso 3.*
 
-Start the local development server:
+**Paso C: (Opcional) Cargar datos de prueba**
+Si quieres que la base de datos no empiece vacía, ejecuta:
+```bash
+npx prisma db seed
+```
+
+### 5. Iniciar la Aplicación
+
+Ahora puedes levantar el servidor de desarrollo:
+
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`.
+Abre tu navegador en: `http://localhost:3000`
 
-- **Frontend**: `http://localhost:3000`
-- **Profiles API**: `http://localhost:3000/api/profiles`
+---
 
-## 🏗 Architecture
+## 👤 ¿Cómo funciona el sistema?
 
--   **Framework**: Next.js 16 (App Router) with Turbopack.
--   **Database**: SQLite with Prisma ORM.
--   **API**: Internal Next.js API Routes (`app/api/*`) for managing profile data.
--   **Styling**: Tailwind CSS v4.
--   **Animations**: Framer Motion for high-performance, GPU-accelerated micro-interactions.
--   **Icons**: Lucide React.
--   **Font**: 'Outfit' (Google Fonts) for a modern, clean aesthetic.
+### Registrar un nuevo Perfil / Curriculum
+1.  Con la app corriendo, ve a **[http://localhost:3000/showcase](http://localhost:3000/showcase)**.
+2.  Haz clic en el botón **"Create Profile"** (esquina superior derecha).
+3.  Completa el formulario wizard (Información, Stats, Stack, Proyectos).
+4.  Al finalizar, tu perfil se guardará en la base de datos local y será visible inmediatamente.
 
-## 📂 Structure
+### Solución de Problemas Comunes
 
-```
-/app
-  /api            # Internal API routes (Profiles, etc.)
-  /page.tsx       # Main Landing Page
-/components
-  /layout         # Global layout components (Navbar, Footer)
-  /sections       # Page-specific sections (Hero, About, Projects, etc.)
-  /ui             # Reusable UI primitives (Buttons, Cards)
-/lib
-  db.ts           # Prisma Database connection instance
-  api.ts          # Client-side fetchers for the API
-  actions.ts      # Server Actions (Internal Logic)
-/prisma
-  schema.prisma   # Database Schema Definition
-  seed.ts         # Initial Data Loading Script
-/public           # Static assets
-```
+**Error: "The table main.Profile does not exist"**
+*   **Causa:** No ejecutaste `npx prisma db push`.
+*   **Solución:** Detén el servidor (`Ctrl + C`), ejecuta `npx prisma db push` y vuelve a iniciar `npm run dev`.
 
-## 🎨 Design Philosophy
+**Error: "Environment variable not found: DATABASE_URL"**
+*   **Causa:** No creaste el archivo `.env` o no tiene el formato correcto.
+*   **Solución:** Revisa el Paso 3.
 
--   **Impact First**: The design prioritizes business value and technical achievements over generic buzzwords.
--   **Performance**: Optimized for Core Web Vitals and fast data fetching.
--   **Seniority**: Clean code, typed interfaces, and scalable component architecture.
+## 🏗 Stack Tecnológico
+
+-   **Frontend**: Next.js 16 (App Router).
+-   **Backend**: API Routes Integradas (`app/api/*`).
+-   **Base de Datos**: SQLite (archivo local).
+-   **ORM**: Prisma.
+-   **Estilos**: Tailwind CSS v4.

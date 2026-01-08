@@ -450,6 +450,10 @@ export function EditProfileModal({ profile }: { profile: any }) {
                                         <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">Email (Social)</label>
                                         <input name="social_email" defaultValue={getSocialUrl('Email')} className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="ejemplo@correo.com" />
                                     </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-widest">TikTok</label>
+                                        <input name="social_tiktok" defaultValue={getSocialUrl('TikTok')} className="w-full px-4 py-2 bg-slate-950/50 border border-white/10 rounded-lg text-xs outline-none focus:border-cyan-500 text-white placeholder:text-slate-700" placeholder="https://tiktok.com/@..." />
+                                    </div>
                                 </div>
                             </div>
                         </div>

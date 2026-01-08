@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LucideIcon, Github, Linkedin, Mail, Youtube, FileText, CheckCircle2 } from "lucide-react";
+import { LucideIcon, Github, Linkedin, Mail, Youtube, FileText, CheckCircle2, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EditProfileModal } from "@/components/EditProfileModal";
 
@@ -52,6 +52,7 @@ const SocialIcon = ({ name, url, className }: { name: string, url: string, class
         GitHub: Github,
         Mail: Mail,
         Youtube: Youtube,
+        TikTok: Video,
     };
 
     const Icon = Icons[name] || FileText;
