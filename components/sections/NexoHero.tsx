@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CreateProfileModal } from "@/components/CreateProfileModal";
-import { Search, Terminal as TerminalIcon, UserPlus } from "lucide-react";
+import { Search, Terminal as TerminalIcon } from "lucide-react";
 
-export function NexoHero({ onRefresh }: { onRefresh?: () => void }) {
+export function NexoHero() {
     const [text, setText] = useState("");
-    const fullText = "Ingresa un nombre o industria...";
+    const fullText = "Ingresa un nombre o empresa...";
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
@@ -56,28 +55,16 @@ export function NexoHero({ onRefresh }: { onRefresh?: () => void }) {
                     className="max-w-3xl mx-auto w-full"
                 >
                     <div className="terminal-box rounded-lg p-1 group">
-                        <div className="flex items-center justify-between px-4 py-2 bg-black/60 rounded-t-md border-b border-primary/20">
-                            <div className="flex items-center gap-4">
-                                <div className="flex gap-1.5">
-                                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] font-mono text-primary/60 uppercase tracking-widest hidden sm:flex">
-                                    <TerminalIcon size={12} />
-                                    Buscar empleo por puesto o palabra clave
-                                </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-black/60 rounded-t-md border-b border-primary/20">
+                            <div className="flex gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                                <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                                <div className="w-3 h-3 rounded-full bg-green-500/50" />
                             </div>
-
-                            <CreateProfileModal
-                                onSuccess={onRefresh}
-                                trigger={
-                                    <button className="flex items-center gap-2 px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] uppercase font-bold tracking-widest rounded transition-colors border border-primary/20 hover:border-primary/50 group/btn">
-                                        <UserPlus size={12} className="group-hover/btn:scale-110 transition-transform" />
-                                        <span>Registrar Perfil</span>
-                                    </button>
-                                }
-                            />
+                            <div className="flex items-center gap-2 ml-4 text-[10px] font-mono text-primary/60 uppercase tracking-widest">
+                                <TerminalIcon size={12} />
+                                Buscar empleo por puesto o palabra clave
+                            </div>
                         </div>
 
                         <div className="relative flex items-center bg-black/40 p-4 rounded-b-md">

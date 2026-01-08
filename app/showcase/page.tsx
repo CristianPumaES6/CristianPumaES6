@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getClientShowcaseProfiles } from "@/lib/api";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
 
+import { CreateProfileModal } from "@/components/CreateProfileModal";
 import { saveSearchQuery } from "@/lib/actions";
 
 export default function ShowcasePage() {
@@ -93,7 +94,9 @@ export default function ShowcasePage() {
 
             <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto space-y-12">
                 <header className="relative pt-12 pb-8 px-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-visible group">
-
+                    <div className="absolute top-0 right-0 p-8 z-20">
+                        <CreateProfileModal onSuccess={fetchProfiles} />
+                    </div>
 
                     <div className="max-w-3xl relative z-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-mono uppercase tracking-[0.2em] mb-6">
@@ -118,7 +121,7 @@ export default function ShowcasePage() {
                             <input
                                 type="text"
                                 className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono text-sm tracking-wide"
-                                placeholder="Ingresa un nombre o industria..."
+                                placeholder="Ingresa un nombre o empresa..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
                                 onKeyDown={handleKeyDown}

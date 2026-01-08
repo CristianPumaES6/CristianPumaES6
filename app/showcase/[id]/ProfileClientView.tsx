@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getClientProfileById } from "@/lib/api";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Building2, GraduationCap, ShieldAlert, Smartphone, Briefcase, Link2, Users, Loader2, MapPin, Mail, Phone, Award } from "lucide-react";
+import { ArrowLeft, Building2, GraduationCap, ShieldAlert, Smartphone, Briefcase, Link2, Users, Loader2, MapPin, Mail, Phone, Award, Scale, Fingerprint, ShieldCheck, Lightbulb, Laptop, Landmark, FileText, Banknote, Stamp, Settings, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { Hero } from "@/components/sections/hero";
 import { About } from "@/components/sections/about";
@@ -43,6 +43,27 @@ const THEMES = {
         buttonPrimary: "bg-slate-900 text-white px-8 py-4 rounded-sm font-medium hover:bg-slate-800 transition-colors border border-slate-900",
         terminal: false
     }
+};
+
+const getCompetencyIcon = (title: string) => {
+    const t = title.toLowerCase();
+    if (t.includes('corporativo') || t.includes('corporate') || t.includes('negocios')) return Building2;
+    if (t.includes('litigio') || t.includes('litigation') || t.includes('resolución') || t.includes('disputa')) return Scale;
+    if (t.includes('penal') || t.includes('criminal') || t.includes('delito')) return Fingerprint;
+    if (t.includes('compliance') || t.includes('riesgo') || t.includes('risk') || t.includes('auditoría')) return ShieldCheck;
+    if (t.includes('intelectual') || t.includes('intellectual') || t.includes('marca') || t.includes('patente')) return Lightbulb;
+    if (t.includes('digital') || t.includes('tecnolog') || t.includes('cyber') || t.includes('ciber') || t.includes('data')) return Laptop;
+
+    // New categories
+    if (t.includes('administrativo') || t.includes('pública') || t.includes('publica') || t.includes('gobierno')) return Landmark;
+    if (t.includes('consumidor') || t.includes('cliente') || t.includes('usuarios')) return ShoppingBag;
+    if (t.includes('procesal') || t.includes('documental') || t.includes('expediente') || t.includes('tramite')) return FileText;
+    if (t.includes('cobranza') || t.includes('recuperación') || t.includes('financiero') || t.includes('bancario') || t.includes('bank')) return Banknote;
+    if (t.includes('notarial') || t.includes('registral') || t.includes('fe pública') || t.includes('escritura')) return Stamp;
+    if (t.includes('operaciones') || t.includes('logística') || t.includes('gestión') || t.includes('management')) return Settings;
+    if (t.includes('humanos') || t.includes('rrhh') || t.includes('personal') || t.includes('laboral')) return Users;
+
+    return Award;
 };
 
 export default function ProfileClientView({ id }: { id: string }) {
@@ -191,28 +212,31 @@ export default function ProfileClientView({ id }: { id: string }) {
 
                     {legalSpecialties?.length > 0 && (
                         <section className="mb-20">
-                            <h2 className={theme.sectionHeading}>Core Competencies</h2>
+                            <h2 className={theme.sectionHeading}>Competencias</h2>
                             <div className="grid md:grid-cols-2 gap-6">
-                                {legalSpecialties.map((spec: any) => (
-                                    <div key={spec.id} className="group bg-white p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all hover:border-slate-300">
-                                        <div className="flex items-start gap-4">
-                                            <div className="mt-1 p-2 bg-slate-50 rounded text-slate-700 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                                                <Award size={20} />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-serif font-bold text-slate-900 mb-2 text-lg">{spec.title}</h3>
-                                                <p className="text-sm text-slate-500 leading-relaxed">{spec.highlights?.[0]?.text}</p>
+                                {legalSpecialties.map((spec: any) => {
+                                    const Icon = getCompetencyIcon(spec.title);
+                                    return (
+                                        <div key={spec.id} className="group bg-white p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all hover:border-slate-300">
+                                            <div className="flex items-start gap-4">
+                                                <div className="mt-1 p-2 bg-slate-50 rounded text-slate-700 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                                    <Icon size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-serif font-bold text-slate-900 mb-2 text-lg">{spec.title}</h3>
+                                                    <p className="text-sm text-slate-500 leading-relaxed">{spec.highlights?.[0]?.text}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </section>
                     )}
 
                     <div className="grid lg:grid-cols-12 gap-16">
                         <div className="lg:col-span-8">
-                            <h2 className={theme.sectionHeading}>Experience & Cases</h2>
+                            <h2 className={theme.sectionHeading}>Experiencia & Casos</h2>
                             <div className="space-y-8">
                                 {profile.projects?.map((project: any, index: number) => (
                                     <div key={project.id} className={theme.card}>

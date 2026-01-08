@@ -156,16 +156,63 @@ export const TECH_STACK_CATEGORIES = {
 
 export const LEGAL_STACK_CATEGORIES = {
     "Áreas de Práctica": [
-        "Litigio Civil", "Derecho Penal", "Laboral", "Administrativo", "Tributario", "Familia", "Internacional", "Ambiental"
+        "Litigio Civil y Comercial",
+        "Derecho Penal Económico",
+        "Derecho Laboral y Seguridad Social",
+        "Derecho Administrativo y Gestión Pública",
+        "Derecho Tributario y Fiscalidad",
+        "Derecho de Familia y Sucesiones",
+        "Derecho Internacional Público y Privado",
+        "Derecho Ambiental y Recursos Naturales",
+        "Contrataciones con el Estado",
+        "Derecho Bancario y Financiero",
+        "Derecho Inmobiliario",
+        "Protección de Datos Personales",
+        "Compliance y Prevención de Lavado de Activos",
+        "Derecho de la Competencia (Indecopi)",
+        "Derecho de Minería y Energía"
     ],
     "Herramientas LegalTech": [
-        "LexisNexis", "vLex", "Clio", "DocuSign", "Office 365", "CaseTracking", "Westlaw", "LegalZoom"
+        "ReFirma (Firma Digital Certificada)",
+        "SINOE / Casilla Electrónica",
+        "MPV-PJ (Mesa de Partes Virtual)",
+        "CEJ / Expediente Judicial Electrónico",
+        "SPIJ (Minería Normativa y Legal)",
+        "SEL (SUCAMEC en Línea)",
+        "SID-RENIEC / SUNARP (SIRI)",
+        "VUR / SUNARP (Vigencia de Poderes)",
+        "SNE-INDECOPI (Propiedad Intelectual)",
+        "SEACE (Contrataciones del Estado)",
+        "CaseTracking (Gestión de Procesos Judiciales)",
+        "TimeBillingX (Control de Horas Facturables)",
+        "Adobe Acrobat Pro (Foliación Digital y OCR)",
+        "Jurisprudencia Sistematizada (LP / Legis)",
+        "Google Meet (Audiencias Virtuales)",
+        "Microsoft Excel Advanced (Control de Foliación)"
     ],
     "Habilidades Profesionales": [
-        "Oratoria Forense", "Negociación", "Redacción Jurídica", "Investigación Legal", "Gestión de Crisis", "Liderazgo de Equipos"
+
+        "Oratoria Forense",
+        "Negociación y Resolución de Conflictos",
+        "Redacción Jurídica y Administrativa",
+        "Investigación Legal Avanzada",
+        "Gestión de Crisis y Contingencias",
+        "Liderazgo de Equipos Multidisciplinarios",
+        "Control Procesal y de Plazos",
+        "Gestión de Cobranza Extrajudicial",
+        "Foliación y Organización de Expedientes",
+        "Asistencia en Audiencias Virtuales",
+        "Logística de Operaciones y Experiencia",
+        "Compliance y Gestión de Riesgos"
     ],
     "Idiomas & Jurisdicción": [
-        "Inglés Jurídico", "Francés", "Derecho Común (Common Law)", "Derecho Civil (Civil Law)"
+        "Inglés Jurídico", "Francés",
+        "Derecho Civil (Sistema Románico-Germánico)",
+        "Derecho Común (Common Law Foundations)",
+        "Normativa de la Comunidad Andina (CAN)",
+        "Sistema Interamericano de Derechos Humanos",
+        "Jurisdicción Administrativa (SUCAMEC/RENIEC)",
+        "Derecho Comparado e Internacional"
     ]
 }
 

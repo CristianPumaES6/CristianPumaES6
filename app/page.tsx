@@ -28,7 +28,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-0 -mx-4 sm:-mx-6 lg:-mx-8">
-      <NexoHero onRefresh={refreshProfiles} />
+      <NexoHero />
       <ActivityCounter />
       <RoleSelector />
       <ProfileVitrina profiles={profiles} />

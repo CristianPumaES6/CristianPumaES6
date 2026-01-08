@@ -333,7 +333,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setIsOpen(false)} />
 
             {/* Modal Container */}
-            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 h-auto max-h-[95vh] flex flex-col relative z-20">
+            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-5xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 h-[85vh] flex flex-col relative z-20">
 
                 {/* Header */}
                 <div className="bg-slate-950/60 px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center sticky top-0 z-30 backdrop-blur-sm">
