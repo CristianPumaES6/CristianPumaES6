@@ -64,7 +64,7 @@ const SocialIcon = ({ name, url, className }: { name: string, url: string, class
     );
 }
 
-export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
+export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcaseProfile, onProfileUpdate?: () => void }) => {
     const flavor = VARIANTS[profile.industry as keyof typeof VARIANTS] || VARIANTS.Tech;
 
     return (
@@ -91,7 +91,10 @@ export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
                         <p className="text-lg opacity-80">{profile.headline}</p>
                     </div>
 
-                    <div className="prose prose-sm max-w-none text-inherit opacity-70 italic font-serif">
+                    <div className={cn(
+                        "prose prose-sm max-w-none text-inherit opacity-70",
+                        profile.industry === 'Tech' ? 'font-mono' : 'font-serif italic'
+                    )}>
                         <p>{profile.bio}</p>
                     </div>
 
@@ -136,7 +139,7 @@ export const ShowcaseCard = ({ profile }: { profile: ShowcaseProfile }) => {
                     </div>
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
-                        <EditProfileModal profile={profile} />
+                        <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
                         <a href={`/showcase/${profile.id}`} className={cn(
                             "w-full py-2.5 px-6 rounded-lg text-sm font-medium text-center transition-all border",
                             profile.industry === 'Tech'

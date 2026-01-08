@@ -17,7 +17,9 @@ export async function getShowcaseProfiles() {
                 },
                 skillCategories: {
                     include: { items: true }
-                }
+                },
+                education: true,
+                certifications: true
             }
         })
         return profiles
@@ -417,5 +419,18 @@ export async function updateProfile(id: string, formData: FormData) {
     } catch (e) {
         console.error(e)
         return { success: false }
+    }
+}
+
+export async function saveSearchQuery(query: string) {
+    if (!query.trim()) return;
+    try {
+        await db.searchLog.create({
+            data: {
+                query: query
+            }
+        })
+    } catch (e) {
+        console.error("Failed to save search log:", e)
     }
 }

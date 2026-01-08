@@ -3,57 +3,13 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { createClientProfile } from '@/lib/api'
-import { X, UserPlus, Briefcase, Scale, Server, Link2, ShieldAlert, Database, Smartphone, Users, Globe, Building, FolderGit2, Image as ImageIcon, Plus, Trash2, CheckCircle2, GraduationCap, Award, Pencil } from 'lucide-react'
+import { X, UserPlus, Briefcase, Scale, Server, Link2, ShieldAlert, Database, Smartphone, Users, Globe, Building, FolderGit2, Image as ImageIcon, Plus, Trash2, CheckCircle2, GraduationCap, Award, Pencil, Gavel, FileText } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { TECH_SPECIALTIES, LEGAL_SPECIALTIES, TECH_STACK_CATEGORIES, LEGAL_STACK_CATEGORIES, TECH_OPTIONS, LEGAL_OPTIONS, STATS_CONFIG } from '@/data/profile-constants'
 
-const TECH_SPECIALTIES = [
-    { id: '1', title: 'Arquitecturas Escalables', description: 'Diseño de sistemas distribuidos capaces de manejar alta concurrencia.', icon: Briefcase },
-    { id: '2', title: 'Integraciones Complejas', description: 'Conexión de ecosistemas mediante APIs REST/SOAP.', icon: Link2 },
-    { id: '3', title: 'Sistemas Críticos', description: 'Software para entornos donde el fallo no es una opción.', icon: ShieldAlert },
-    { id: '4', title: 'Optimización de Datos', description: 'Modelado y tuning de bases de datos masivas.', icon: Database },
-    { id: '5', title: 'Mobile & Offline', description: 'Apps que funcionan sin conexión en entornos remotos.', icon: Smartphone },
-    { id: '6', title: 'Liderazgo Técnico', description: 'Gestión de equipos bajo metodologías ágiles (Scrum).', icon: Users },
-]
 
-const TECH_STACK_CATEGORIES = {
-    "Backend & Arquitectura": [
-        "Node.js", "NestJS", "Express", "Sequelize", "OutSystems", "REST/SOAP", "Microservices", "Java", "C#", "Python", "Go"
-    ],
-    "Bases de Datos": [
-        "PostgreSQL", "SQL Server", "Oracle", "MongoDB", "MySQL", "Redis", "DynamoDB"
-    ],
-    "DevOps & Infra": [
-        "Docker", "Nginx", "Linux", "PM2", "DigitalOcean", "Git", "AWS", "Azure", "Kubernetes", "CI/CD"
-    ],
-    "Frontend & Diseño": [
-        "Next.js", "React", "Tailwind", "Figma (Concept)", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
-    ]
-}
 
-const TECH_OPTIONS = [
-    "React", "Angular", "Vue.js", "Next.js",
-    "Node.js", "Python", "Java", "C# / .NET",
-    "AWS", "Azure", "Docker", "Kubernetes",
-    "SQL Server", "PostgreSQL", "MongoDB", "Redis",
-    "TensorFlow", "OpenAI", "Flutter", "React Native"
-]
-
-// Stats Configuration
-const STATS_CONFIG = {
-    Tech: [
-        { label: 'Ranking Global', name: 'ranking', placeholder: '#339' },
-        { label: 'Experiencia', name: 'experience', placeholder: '+7 Años' },
-        { label: 'Nivel Seniority', name: 'level', placeholder: 'Senior' },
-        { label: 'Tech Stack', name: 'stack', placeholder: 'Full Stack' },
-    ],
-    Legal: [
-        { label: 'Ciclo Académico', name: 'ciclo', placeholder: 'Noveno' },
-        { label: 'Mérito', name: 'merito', placeholder: 'Tercio Superior' },
-        { label: 'Disponibilidad', name: 'disponibilidad', placeholder: 'Inmediata' },
-    ]
-}
-
-export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
+export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => void, trigger?: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)
     const [step, setStep] = useState(1)
     const [isPending, setIsPending] = useState(false)
@@ -64,7 +20,12 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
         "Backend & Arquitectura": [],
         "Bases de Datos": [],
         "DevOps & Infra": [],
-        "Frontend & Diseño": []
+
+        "Frontend & Diseño": [],
+        "Áreas de Práctica": [],
+        "Herramientas LegalTech": [],
+        "Habilidades Profesionales": [],
+        "Idiomas & Jurisdicción": []
     })
 
     // Project State
@@ -240,39 +201,20 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
-        if (step === 1) {
-            setStep(2);
-        } else if (step === 2) {
-            if (industry === 'Tech') {
-                setStep(3);
-            } else {
-                // Legal finishes
-            }
-        } else if (step === 3) {
-            if (industry === 'Tech') {
-                setStep(4); // Tech Stack
-            }
-        } else if (step === 4) {
-            if (industry === 'Tech') {
-                setStep(5); // Education
-            }
-        } else if (step === 5) {
-            if (industry === 'Tech') {
-                setStep(6); // Certifications
-            }
-        } else if (step === 6) {
-            if (industry === 'Tech') {
-                setStep(7); // Projects
-            }
+        if (step < 7) {
+            setStep(step + 1);
         }
     }
 
-    const isLastStep = (industry === 'Tech' && step === 7) || (industry === 'Legal' && step === 2);
+    const isLastStep = step === 7;
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
 
     if (!isOpen) {
+        if (trigger) {
+            return <div onClick={() => setIsOpen(true)}>{trigger}</div>
+        }
         return (
             <button
                 onClick={() => setIsOpen(true)}
@@ -301,11 +243,11 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                             <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_#06b6d4]" />
                             {step === 1 && 'New Profile Identity'}
                             {step === 2 && 'Excellence Metrics'}
-                            {step === 3 && 'Technical Specialties'}
-                            {step === 4 && 'Arsenal Tecnológico'}
+                            {step === 3 && (industry === 'Tech' ? 'Technical Specialties' : 'Áreas de Especialización')}
+                            {step === 4 && (industry === 'Tech' ? 'Arsenal Tecnológico' : 'Competencias Jurídicas')}
                             {step === 5 && 'Historial Académico'}
-                            {step === 6 && 'Cursos y Certificaciones'}
-                            {step === 7 && 'Project Portfolio'}
+                            {step === 6 && (industry === 'Tech' ? 'Cursos y Certificaciones' : 'Formación Continua')}
+                            {step === 7 && (industry === 'Tech' ? 'Project Portfolio' : 'Experiencia & Casos')}
                         </h2>
                         <p className="text-[10px] text-cyan-500 font-mono uppercase tracking-[0.2em] mt-1 opacity-70">Module // Phase.{step < 10 ? `0${step}` : step} // Architecture</p>
                     </div>
@@ -315,7 +257,7 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle">
-                    <form onSubmit={onSubmit} className="space-y-10">
+                    <form id="create-profile-form" onSubmit={onSubmit} className="space-y-10">
 
                         {/* STEP 1: BASIC INFO */}
                         <div className={step === 1 ? 'block space-y-6' : 'hidden'}>
@@ -401,7 +343,7 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                         {/* STEP 3: TECH SPECIALTIES (Grid) */}
                         <div className={step === 3 ? 'block' : 'hidden'}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {TECH_SPECIALTIES.map((spec) => {
+                                {(industry === 'Tech' ? TECH_SPECIALTIES : LEGAL_SPECIALTIES).map((spec) => {
                                     const Icon = spec.icon
                                     return (
                                         <label key={spec.id} className="cursor-pointer relative group">
@@ -429,8 +371,8 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                         {/* STEP 4: TECH STACK (New) */}
                         <div className={step === 4 ? 'block' : 'hidden'}>
                             <div className="grid grid-cols-2 gap-6">
-                                {Object.entries(TECH_STACK_CATEGORIES).map(([catName, items]) => (
-                                    <div key={catName} className="bg-slate-950/30 p-5 rounded-2xl border border-white/5 backdrop-blur-sm">
+                                {Object.entries(industry === 'Tech' ? TECH_STACK_CATEGORIES : LEGAL_STACK_CATEGORIES).map(([catName, items]) => (
+                                    <div key={catName} className="bg-slate-950 p-5 rounded-2xl border border-white/10 shadow-lg">
                                         <h4 className="text-[10px] font-bold text-cyan-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                             <div className="w-1 h-3 bg-cyan-500 rounded-full" />
                                             {catName}
@@ -438,7 +380,7 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                                         <div className="space-y-3">
                                             {items.map(item => (
                                                 <label key={item} className="flex items-center gap-3 cursor-pointer group/item">
-                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'border-white/20 group-hover/item:border-cyan-500/50'}`}>
+                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'border-white/20 bg-slate-900 group-hover/item:border-cyan-500/50'}`}>
                                                         {selectedStack[catName]?.includes(item) && <CheckCircle2 size={10} className="text-black" />}
                                                     </div>
                                                     <input
@@ -447,7 +389,7 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                                                         checked={selectedStack[catName]?.includes(item)}
                                                         onChange={() => toggleStackItem(catName, item)}
                                                     />
-                                                    <span className={`text-xs uppercase tracking-tighter transition-colors ${selectedStack[catName]?.includes(item) ? 'text-white font-bold' : 'text-slate-500 group-hover/item:text-slate-300'}`}>{item}</span>
+                                                    <span className={`text-xs uppercase tracking-tighter transition-colors ${selectedStack[catName]?.includes(item) ? 'text-white font-bold' : 'text-slate-400 group-hover/item:text-slate-200'}`}>{item}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -585,15 +527,16 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                             </div>
                         </div>
 
+                        {/* STEP 7: PROJECTS */}
                         <div className={step === 7 ? 'block space-y-6' : 'hidden'}>
                             {projects.length > 0 && (
                                 <div className="space-y-3 mb-6">
-                                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Active Operations ({projects.length})</h4>
+                                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{industry === 'Tech' ? 'Active Operations' : 'Casos & Experiencia'} ({projects.length})</h4>
                                     {projects.map((p, idx) => (
                                         <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
                                             <div>
                                                 <div className="font-bold text-white text-sm">{p.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} active technologies</div>
+                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
@@ -609,7 +552,7 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
 
                                 <h3 className="font-bold text-white mb-2 flex items-center gap-3 relative z-10">
                                     {projects.length > 0 ? <Plus size={20} className="text-cyan-500" /> : <Briefcase size={20} className="text-cyan-500" />}
-                                    <span className="tracking-tight">{projects.length > 0 ? 'Add Another Project' : 'Add First Project'}</span>
+                                    <span className="tracking-tight">{projects.length > 0 ? (industry === 'Tech' ? 'Add Another Project' : 'Agregar Otro Caso') : (industry === 'Tech' ? 'Add First Project' : 'Agregar Primer Caso')}</span>
                                 </h3>
 
                                 <div className="grid grid-cols-2 gap-4 mb-4 relative z-10">
@@ -617,14 +560,14 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                                         <input type="radio" name="current_project_type" value="Laboral" className="peer sr-only" checked={currentProject.type === 'Laboral'} onChange={() => setCurrentProject({ ...currentProject, type: 'Laboral' })} />
                                         <div className="border border-white/10 group-hover/type:border-cyan-500/30 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 rounded-xl p-4 flex items-center gap-3 transition-all bg-slate-950/40">
                                             <Building size={16} className="text-slate-500 peer-checked:text-cyan-400" />
-                                            <span className="font-bold text-xs text-slate-400 peer-checked:text-white uppercase tracking-widest">Corporate</span>
+                                            <span className="font-bold text-xs text-slate-400 peer-checked:text-white uppercase tracking-widest">{industry === 'Tech' ? 'Corporate' : 'Firma / Estudio'}</span>
                                         </div>
                                     </label>
                                     <label className="cursor-pointer group/type">
                                         <input type="radio" name="current_project_type" value="Personal" className="peer sr-only" checked={currentProject.type === 'Personal'} onChange={() => setCurrentProject({ ...currentProject, type: 'Personal' })} />
                                         <div className="border border-white/10 group-hover/type:border-purple-500/30 peer-checked:border-purple-500 peer-checked:bg-purple-500/10 rounded-xl p-4 flex items-center gap-3 transition-all bg-slate-950/40">
                                             <FolderGit2 size={16} className="text-slate-500 peer-checked:text-purple-400" />
-                                            <span className="font-bold text-xs text-slate-400 peer-checked:text-white uppercase tracking-widest">Personal</span>
+                                            <span className="font-bold text-xs text-slate-400 peer-checked:text-white uppercase tracking-widest">{industry === 'Tech' ? 'Personal' : 'Independiente'}</span>
                                         </div>
                                     </label>
                                 </div>
@@ -632,47 +575,47 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                                 <div className="space-y-6 relative z-10">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Identity</label>
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Identity' : 'Caso / Proyecto'}</label>
                                             <input
                                                 value={currentProject.title}
                                                 onChange={(e) => setCurrentProject({ ...currentProject, title: e.target.value })}
                                                 className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light"
-                                                placeholder="Project Title"
+                                                placeholder={industry === 'Tech' ? "Project Title" : "Ej: Defensa Corporativa vs. Estado"}
                                             />
                                         </div>
                                         {currentProject.type === 'Laboral' && (
                                             <div className="space-y-2 animate-in slide-in-from-right-2 duration-300">
-                                                <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Client / Company</label>
+                                                <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Client / Company' : 'Cliente / Firma'}</label>
                                                 <input
                                                     value={currentProject.client}
                                                     onChange={(e) => setCurrentProject({ ...currentProject, client: e.target.value })}
                                                     className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light"
-                                                    placeholder="Who you worked for"
+                                                    placeholder={industry === 'Tech' ? "Who you worked for" : "Empresa o Cliente"}
                                                 />
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Challenge Matrix</label>
-                                        <textarea value={currentProject.desc} onChange={(e) => setCurrentProject({ ...currentProject, desc: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Describe the mission challenge..." />
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Challenge Matrix' : 'Contexto del Caso'}</label>
+                                        <textarea value={currentProject.desc} onChange={(e) => setCurrentProject({ ...currentProject, desc: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Describe the mission challenge..." : "Describa el conflicto o requerimiento legal..."} />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Engineered Solution</label>
-                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Core architecture details..." />
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Engineered Solution' : 'Estrategia Legal'}</label>
+                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Core architecture details..." : "Argumentación y acciones tomadas..."} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Calculated Outcome</label>
-                                            <textarea value={currentProject.outcome} onChange={(e) => setCurrentProject({ ...currentProject, outcome: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Impact and results..." />
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Calculated Outcome' : 'Resultado / Sentencia'}</label>
+                                            <textarea value={currentProject.outcome} onChange={(e) => setCurrentProject({ ...currentProject, outcome: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Impact and results..." : "Fallo favorale, acuerdo, etc..."} />
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest ml-1">Tech Substack</label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest ml-1">{industry === 'Tech' ? 'Tech Substack' : 'Materias Relacionadas'}</label>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-40 overflow-y-auto border border-white/5 rounded-2xl p-4 bg-slate-950/40 custom-scrollbar shadow-inner">
-                                            {TECH_OPTIONS.map(tech => (
+                                            {(industry === 'Tech' ? TECH_OPTIONS : LEGAL_OPTIONS).map(tech => (
                                                 <label key={tech} className="flex items-center gap-3 cursor-pointer group/item">
                                                     <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${currentProject.tags.includes(tech) ? 'bg-cyan-500 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'border-white/20 group-hover/item:border-cyan-500/50'}`}>
                                                         {currentProject.tags.includes(tech) && <CheckCircle2 size={10} className="text-black" />}
@@ -706,25 +649,26 @@ export function CreateProfileModal({ onSuccess }: { onSuccess?: () => void }) {
                                         onClick={handleAddProject}
                                         className="w-full py-4 bg-white text-black font-black uppercase tracking-[0.2em] rounded-xl hover:bg-cyan-400 transition-all shadow-xl active:scale-95"
                                     >
-                                        + Deploy to Project List
+                                        {industry === 'Tech' ? '+ Deploy to Project List' : '+ Archivar en Expediente'}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-8 flex justify-between gap-4 border-t border-white/5 mt-10 sticky bottom-0 bg-slate-900/95 backdrop-blur-sm p-4 z-40">
-                            {step > 1 ? (
-                                <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
-                            ) : (
-                                <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
-                            )}
-                            {isLastStep ? (
-                                <button type="submit" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">{isPending ? 'DEPLOYING...' : 'FINALIZE_PROFILE'}</button>
-                            ) : (
-                                <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">Next</button>
-                            )}
-                        </div>
                     </form>
+                </div>
+
+                <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40">
+                    {step > 1 ? (
+                        <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
+                    ) : (
+                        <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
+                    )}
+                    {isLastStep ? (
+                        <button type="submit" form="create-profile-form" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">{isPending ? 'DEPLOYING...' : 'FINALIZE_PROFILE'}</button>
+                    ) : (
+                        <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">Next</button>
+                    )}
                 </div>
             </div>
         </div>,

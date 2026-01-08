@@ -130,3 +130,10 @@ model Certification {
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
+
+// New model for tracking search history
+model SearchLog {
+  id        String   @id @default(uuid())
+  query     String
+  timestamp DateTime @default(now())
+}

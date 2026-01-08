@@ -3,60 +3,11 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { updateClientProfile } from '@/lib/api'
-import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap, Award, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap, Award, ChevronDown, ChevronUp, Globe, Gavel, FileText } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-// ... (imports remain)
+import { TECH_SPECIALTIES, LEGAL_SPECIALTIES, TECH_STACK_CATEGORIES, LEGAL_STACK_CATEGORIES, TECH_OPTIONS, LEGAL_OPTIONS, STATS_CONFIG } from '@/data/profile-constants'
 
-const TECH_SPECIALTIES = [
-    { id: '1', title: 'Arquitecturas Escalables', description: 'Diseño de sistemas distribuidos capaces de manejar alta concurrencia.', icon: Briefcase },
-    { id: '2', title: 'Integraciones Complejas', description: 'Conexión de ecosistemas mediante APIs REST/SOAP.', icon: Link2 },
-    { id: '3', title: 'Sistemas Críticos', description: 'Software para entornos donde el fallo no es una opción.', icon: ShieldAlert },
-    { id: '4', title: 'Optimización de Datos', description: 'Modelado y tuning de bases de datos masivas.', icon: Database },
-    { id: '5', title: 'Mobile & Offline', description: 'Apps que funcionan sin conexión en entornos remotos.', icon: Smartphone },
-    { id: '6', title: 'Liderazgo Técnico', description: 'Gestión de equipos bajo metodologías ágiles (Scrum).', icon: Users },
-]
-
-
-
-
-const TECH_STACK_CATEGORIES = {
-    "Backend & Arquitectura": [
-        "Node.js", "NestJS", "Express", "Sequelize", "OutSystems", "REST/SOAP", "Microservices", "Java", "C#", "Python", "Go"
-    ],
-    "Bases de Datos": [
-        "PostgreSQL", "SQL Server", "Oracle", "MongoDB", "MySQL", "Redis", "DynamoDB"
-    ],
-    "DevOps & Infra": [
-        "Docker", "Nginx", "Linux", "PM2", "DigitalOcean", "Git", "AWS", "Azure", "Kubernetes", "CI/CD"
-    ],
-    "Frontend & Diseño": [
-        "Next.js", "React", "Tailwind", "Figma (Concept)", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
-    ]
-}
-
-const TECH_OPTIONS = [
-    "React", "Angular", "Vue.js", "Next.js",
-    "Node.js", "Python", "Java", "C# / .NET",
-    "AWS", "Azure", "Docker", "Kubernetes",
-    "SQL Server", "PostgreSQL", "MongoDB", "Redis",
-    "TensorFlow", "OpenAI", "Flutter", "React Native"
-]
-
-const STATS_CONFIG = {
-    Tech: [
-        { label: 'Ranking Global', name: 'ranking', placeholder: '#339' },
-        { label: 'Experiencia', name: 'experience', placeholder: '+7 Años' },
-        { label: 'Nivel Seniority', name: 'level', placeholder: 'Senior' },
-        { label: 'Tech Stack', name: 'stack', placeholder: 'Full Stack' },
-    ],
-    Legal: [
-        { label: 'Ciclo Académico', name: 'ciclo', placeholder: 'Noveno' },
-        { label: 'Mérito', name: 'merito', placeholder: 'Tercio Superior' },
-        { label: 'Disponibilidad', name: 'disponibilidad', placeholder: 'Inmediata' },
-    ]
-}
-
-export function EditProfileModal({ profile }: { profile: any }) {
+export function EditProfileModal({ profile, onSuccess }: { profile: any, onSuccess?: () => void }) {
     const [isOpen, setIsOpen] = useState(false)
     const [step, setStep] = useState(1)
     const [isPending, setIsPending] = useState(false)
@@ -81,7 +32,11 @@ export function EditProfileModal({ profile }: { profile: any }) {
         "Backend & Arquitectura": [],
         "Bases de Datos": [],
         "DevOps & Infra": [],
-        "Frontend & Diseño": []
+        "Frontend & Diseño": [],
+        "Áreas de Práctica": [],
+        "Herramientas LegalTech": [],
+        "Habilidades Profesionales": [],
+        "Idiomas & Jurisdicción": []
     })
 
     // Projects State
@@ -120,14 +75,15 @@ export function EditProfileModal({ profile }: { profile: any }) {
     // Load initial data when modal opens
     useEffect(() => {
         if (isOpen && profile) {
-            setIndustry(profile.industry)
+            setIndustry(profile.industry || 'Tech')
 
             // Load Specialties
             if (profile.experiences) {
                 const specs = profile.experiences
                     .filter((e: any) => e.type === 'Specialization')
                     .map((e: any) => {
-                        const match = TECH_SPECIALTIES.find(t => t.title === e.title)
+                        const allSpecialties = [...TECH_SPECIALTIES, ...LEGAL_SPECIALTIES]
+                        const match = allSpecialties.find(t => t.title === e.title)
                         return match ? `${match.title}|${match.description}` : null
                     })
                     .filter(Boolean)
@@ -140,7 +96,11 @@ export function EditProfileModal({ profile }: { profile: any }) {
                     "Backend & Arquitectura": [],
                     "Bases de Datos": [],
                     "DevOps & Infra": [],
-                    "Frontend & Diseño": []
+                    "Frontend & Diseño": [],
+                    "Áreas de Práctica": [],
+                    "Herramientas LegalTech": [],
+                    "Habilidades Profesionales": [],
+                    "Idiomas & Jurisdicción": []
                 }
                 profile.skillCategories.forEach((cat: any) => {
                     if (stackData[cat.name] !== undefined) {
@@ -284,7 +244,8 @@ export function EditProfileModal({ profile }: { profile: any }) {
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
-        const maxStep = industry === 'Tech' ? 7 : 2;
+        // Allow all 7 steps for both Tech and Legal
+        const maxStep = 7;
         if (step < maxStep) setStep(step + 1);
     }
 
@@ -315,7 +276,12 @@ export function EditProfileModal({ profile }: { profile: any }) {
         formData.append('certifications_data', JSON.stringify(finalCertifications))
 
         // Inject Projects
-        formData.append('projects_data', JSON.stringify(projects.map(p => ({
+        const finalProjects = [...projects]
+        if (currentProject.title) {
+            finalProjects.push(currentProject)
+        }
+
+        formData.append('projects_data', JSON.stringify(finalProjects.map(p => ({
             title: p.title,
             client: p.client,
             type: p.type,
@@ -327,7 +293,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
             url: p.url
         }))))
 
-        projects.forEach((p, index) => {
+        finalProjects.forEach((p, index) => {
             if (p.imageFile) {
                 formData.append(`project_image_${index}`, p.imageFile)
             }
@@ -376,11 +342,11 @@ export function EditProfileModal({ profile }: { profile: any }) {
                             <Pencil size={20} className="text-cyan-500" />
                             {step === 1 && 'Edit Basic Identity'}
                             {step === 2 && 'Excellence Metrics'}
-                            {step === 3 && 'Core Ecosystem'}
-                            {step === 4 && 'Arsenal Tecnológico'}
+                            {step === 3 && (industry === 'Tech' ? 'Technical Specialties' : 'Áreas de Especialización')}
+                            {step === 4 && (industry === 'Tech' ? 'Arsenal Tecnológico' : 'Competencias Jurídicas')}
                             {step === 5 && 'Academic Foundation'}
-                            {step === 6 && 'Cursos y Certificaciones'}
-                            {step === 7 && 'Project Portfolio'}
+                            {step === 6 && (industry === 'Tech' ? 'Cursos y Certificaciones' : 'Formación Continua')}
+                            {step === 7 && (industry === 'Tech' ? 'Project Portfolio' : 'Experiencia & Casos')}
                         </h2>
                         <p className="text-[10px] text-cyan-500 font-mono uppercase tracking-[0.2em] mt-1 opacity-70">Configuration // Phase.{step < 10 ? `0${step}` : step} // Mode.Update</p>
                     </div>
@@ -390,7 +356,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle">
-                    <form onSubmit={onSubmit} className="space-y-10">
+                    <form id="edit-profile-form" onSubmit={onSubmit} className="space-y-10">
 
 
                         {/* STEP 1: BASIC INFO */}
@@ -479,7 +445,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
                         {/* STEP 3: SPECIALTIES */}
                         <div className={step === 3 ? 'block' : 'hidden'}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {TECH_SPECIALTIES.map((spec) => {
+                                {(industry === 'Tech' ? TECH_SPECIALTIES : LEGAL_SPECIALTIES).map((spec) => {
                                     const Icon = spec.icon
                                     const val = `${spec.title}|${spec.description}`
                                     const isChecked = selectedSpecialties.includes(val)
@@ -513,13 +479,13 @@ export function EditProfileModal({ profile }: { profile: any }) {
                         {/* STEP 4: TECH STACK (New) */}
                         <div className={step === 4 ? 'block' : 'hidden'}>
                             <div className="grid grid-cols-2 gap-6">
-                                {Object.entries(TECH_STACK_CATEGORIES).map(([catName, items]) => (
-                                    <div key={catName}>
-                                        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-l-4 border-cyan-500 pl-3 mb-4">{catName}</h4>
+                                {Object.entries(industry === 'Tech' ? TECH_STACK_CATEGORIES : LEGAL_STACK_CATEGORIES).map(([catName, items]) => (
+                                    <div key={catName} className="bg-slate-950 p-5 rounded-2xl border border-white/10 shadow-lg">
+                                        <h4 className="text-sm font-bold text-slate-200 uppercase tracking-widest border-l-4 border-cyan-500 pl-3 mb-4">{catName}</h4>
                                         <div className="space-y-2">
                                             {items.map(item => (
                                                 <label key={item} className="flex items-center gap-3 cursor-pointer group">
-                                                    <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500' : 'bg-white group-hover:border-cyan-400'}`}>
+                                                    <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500' : 'bg-slate-900 border-white/20 group-hover:border-cyan-400'}`}>
                                                         {selectedStack[catName]?.includes(item) && <CheckCircle2 size={14} className="text-white" />}
                                                     </div>
                                                     <input
@@ -528,7 +494,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
                                                         checked={selectedStack[catName]?.includes(item)}
                                                         onChange={() => toggleStackItem(catName, item)}
                                                     />
-                                                    <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>{item}</span>
+                                                    <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-200 font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>{item}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -730,7 +696,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
                                         className="flex items-center justify-between cursor-pointer group"
                                         onClick={() => setShowProjList(!showProjList)}
                                     >
-                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Active Operations ({projects.length})</h4>
+                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{industry === 'Tech' ? 'Active Operations' : 'Casos & Experiencia'} ({projects.length})</h4>
                                         {showProjList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
                                     </div>
 
@@ -738,7 +704,7 @@ export function EditProfileModal({ profile }: { profile: any }) {
                                         <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
                                             <div>
                                                 <div className="font-bold text-white text-sm">{p.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} active technologies</div>
+                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
@@ -758,58 +724,58 @@ export function EditProfileModal({ profile }: { profile: any }) {
 
                                 <h3 className="font-bold text-white mb-2 flex items-center gap-3 relative z-10">
                                     <Plus size={20} className="text-cyan-500" />
-                                    <span className="tracking-tight">Add / Synchronize Project</span>
+                                    <span className="tracking-tight">{industry === 'Tech' ? 'Add / Synchronize Project' : 'Agregar Caso / Experiencia'}</span>
                                 </h3>
 
                                 <div className="space-y-6 relative z-10">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Domain</label>
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Domain' : 'Tipo'}</label>
                                             <select
                                                 className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white focus:border-cyan-500 transition-all cursor-pointer"
                                                 value={currentProject.type}
                                                 onChange={(e) => setCurrentProject({ ...currentProject, type: e.target.value })}
                                             >
-                                                <option value="Laboral">Corporate Info</option>
-                                                <option value="Personal">Personal Project</option>
+                                                <option value="Laboral">{industry === 'Tech' ? 'Corporate Info' : 'Firma / Estudio'}</option>
+                                                <option value="Personal">{industry === 'Tech' ? 'Personal Project' : 'Independiente'}</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Identity</label>
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Identity' : 'Caso / Proyecto'}</label>
                                             <input
                                                 value={currentProject.title}
                                                 onChange={(e) => setCurrentProject({ ...currentProject, title: e.target.value })}
                                                 className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
-                                                placeholder="Project Title"
+                                                placeholder={industry === 'Tech' ? "Project Title" : "Ej: Defensa Corporativa"}
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Challenge Matrix</label>
-                                        <textarea value={currentProject.desc} onChange={(e) => setCurrentProject({ ...currentProject, desc: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Describe the mission challenge..." />
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Challenge Matrix' : 'Contexto del Caso'}</label>
+                                        <textarea value={currentProject.desc} onChange={(e) => setCurrentProject({ ...currentProject, desc: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Describe the mission challenge..." : "Describa el conflicto o requerimiento legal..."} />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Engineered Solution</label>
-                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Core architecture details..." />
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Engineered Solution' : 'Estrategia Legal'}</label>
+                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Core architecture details..." : "Argumentación y acciones tomadas..."} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Calculated Outcome</label>
-                                            <textarea value={currentProject.outcome} onChange={(e) => setCurrentProject({ ...currentProject, outcome: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder="Impact and results..." />
+                                            <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Calculated Outcome' : 'Resultado / Sentencia'}</label>
+                                            <textarea value={currentProject.outcome} onChange={(e) => setCurrentProject({ ...currentProject, outcome: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Impact and results..." : "Fallo, acuerdo, etc..."} />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">Live Endpoint (Optional)</label>
-                                        <input value={currentProject.url} onChange={(e) => setCurrentProject({ ...currentProject, url: e.target.value })} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all" placeholder="https://external-link.com" />
+                                        <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Live Endpoint (Optional)' : 'Referencia / Link (Opcional)'}</label>
+                                        <input value={currentProject.url} onChange={(e) => setCurrentProject({ ...currentProject, url: e.target.value })} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all" placeholder="https://..." />
                                     </div>
 
                                     <div className="space-y-4">
-                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest ml-1">Tech Substack</label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest ml-1">{industry === 'Tech' ? 'Tech Substack' : 'Materias Relacionadas'}</label>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-40 overflow-y-auto border border-white/5 rounded-2xl p-4 bg-slate-950/40 custom-scrollbar shadow-inner">
-                                            {TECH_OPTIONS.map(tech => (
+                                            {(industry === 'Tech' ? TECH_OPTIONS : LEGAL_OPTIONS).map(tech => (
                                                 <label key={tech} className="flex items-center gap-3 cursor-pointer group/item">
                                                     <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${currentProject.tags.includes(tech) ? 'bg-cyan-500 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'border-white/20 group-hover/item:border-cyan-500/50'}`}>
                                                         {currentProject.tags.includes(tech) && <CheckCircle2 size={10} className="text-black" />}
@@ -843,33 +809,34 @@ export function EditProfileModal({ profile }: { profile: any }) {
                                         onClick={handleAddProject}
                                         className="w-full py-4 bg-white text-black font-black uppercase tracking-[0.2em] rounded-xl hover:bg-cyan-400 transition-all shadow-xl active:scale-95"
                                     >
-                                        + Deploy to Project List
+                                        {industry === 'Tech' ? '+ Deploy to Project List' : '+ Archivar en Expediente'}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-8 flex justify-between gap-4 border-t border-white/5 mt-10 sticky bottom-0 bg-slate-900/95 backdrop-blur-sm p-4 z-40">
-                            {step > 1 ? (
-                                <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
-                            ) : (
-                                <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
-                            )}
-
-                            {(industry === 'Tech' && step === 7) || (industry === 'Legal' && step === 2) ? (
-                                <button type="submit" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
-                                    {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
-                                </button>
-                            ) : (
-                                <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">
-                                    Next
-                                </button>
-                            )}
-                        </div>
                     </form>
                 </div>
+
+                <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40">
+                    {step > 1 ? (
+                        <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
+                    ) : (
+                        <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
+                    )}
+
+                    {step === 7 ? (
+                        <button type="submit" form="edit-profile-form" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                            {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
+                        </button>
+                    ) : (
+                        <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">
+                            Next
+                        </button>
+                    )}
+                </div>
             </div>
-        </div >,
+        </div>,
         document.body
     )
 }

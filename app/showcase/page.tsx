@@ -3,21 +3,74 @@
 import { useEffect, useState } from "react";
 import { getClientShowcaseProfiles } from "@/lib/api";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
-import { CreateProfileModal } from "@/components/CreateProfileModal";
+
+import { saveSearchQuery } from "@/lib/actions";
 
 export default function ShowcasePage() {
     const [profiles, setProfiles] = useState<any[]>([]);
+    const [filteredProfiles, setFilteredProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [showRecent, setShowRecent] = useState(false);
 
     const fetchProfiles = async () => {
         const data = await getClientShowcaseProfiles();
         setProfiles(data);
+        setFilteredProfiles(data);
         setLoading(false);
     };
 
     useEffect(() => {
         fetchProfiles();
+        const storedSearches = localStorage.getItem("proCard_recentSearches");
+        if (storedSearches) {
+            setRecentSearches(JSON.parse(storedSearches));
+        }
     }, []);
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        const lowerQuery = query.toLowerCase();
+
+        if (!query.trim()) {
+            setFilteredProfiles(profiles);
+            return;
+        }
+
+        const filtered = profiles.filter(p =>
+            p.name?.toLowerCase().includes(lowerQuery) ||
+            p.headline?.toLowerCase().includes(lowerQuery) ||
+            p.industry?.toLowerCase().includes(lowerQuery) ||
+            p.location?.toLowerCase().includes(lowerQuery)
+        );
+        setFilteredProfiles(filtered);
+    };
+
+    const submitSearch = async () => {
+        if (!searchQuery.trim()) return;
+
+        // Add to history if unique
+        const newHistory = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
+        setRecentSearches(newHistory);
+        localStorage.setItem("proCard_recentSearches", JSON.stringify(newHistory));
+
+        // Save to DB
+        await saveSearchQuery(searchQuery);
+
+        setShowRecent(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            submitSearch();
+        }
+    };
+
+    const selectRecent = (term: string) => {
+        handleSearch(term);
+        setShowRecent(false);
+    };
 
     if (loading) {
         return (
@@ -30,68 +83,102 @@ export default function ShowcasePage() {
         );
     }
 
-    if (profiles.length === 0) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white font-mono">
-                <div className="terminal-box p-8 rounded-xl max-w-md w-full text-center">
-                    <h1 className="text-2xl font-bold mb-4 text-primary tracking-tighter">DATA_ERROR: NO_PROFILES_FOUND</h1>
-                    <p className="text-slate-400 text-sm">Please ensure the backend is active or register a new professional profile.</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-primary/30">
+        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-cyan-500/30">
             {/* Background Decorative Elements */}
             <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-screen bg-primary/5 blur-[120px] opacity-50" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-screen bg-cyan-500/5 blur-[120px] opacity-50" />
                 <div className="absolute inset-0 bg-scanline opacity-[0.02] animate-scanline" />
             </div>
 
-            <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto space-y-16">
-                <header className="relative pt-12 pb-8 px-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-8">
-                        <CreateProfileModal onSuccess={fetchProfiles} />
-                    </div>
+            <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto space-y-12">
+                <header className="relative pt-12 pb-8 px-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-visible group">
 
-                    <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-mono uppercase tracking-[0.2em] mb-6">
-                            <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+
+                    <div className="max-w-3xl relative z-10">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-mono uppercase tracking-[0.2em] mb-6">
+                            <span className="w-1 h-1 rounded-full bg-cyan-500 animate-pulse" />
                             System active: Professional Hub
                         </div>
 
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
-                            Puramente tecnológico <br />
-                            <span className="text-primary italic font-serif">y profesional.</span>
+                            Mas allá de una simple <br />
+                            <span className="text-cyan-400 italic font-serif">Tarjeta.</span>
                         </h1>
 
-                        <p className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-2xl">
-                            Cada dato es un activo estratégico que construye tu autoridad profesional.
-                            No solo mostramos tu experiencia; <span className="text-slate-200">inyectamos valor</span> a tu perfil mediante atributos validados.
+                        <p className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-2xl mb-10">
+                            Ingeniando tu identidad. El estándar de la excelencia. Una tarjeta, infinitas posibilidades.
                         </p>
+
+                        {/* SEARCH BAR */}
+                        <div className="relative max-w-xl group/search">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/search:text-cyan-400 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                            </div>
+                            <input
+                                type="text"
+                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono text-sm tracking-wide"
+                                placeholder="Ingresa un nombre o industria..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                onFocus={() => setShowRecent(true)}
+                                onBlur={() => setTimeout(() => setShowRecent(false), 200)}
+                            />
+
+                            {/* RECENT SEARCHES DROPDOWN */}
+                            {showRecent && recentSearches.length > 0 && (
+                                <div className="absolute top-full mt-2 w-full bg-slate-950 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20 animate-in fade-in slide-in-from-top-2">
+                                    <div className="px-4 py-2 border-b border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                        Búsquedas Recientes
+                                    </div>
+                                    {recentSearches.map((term, i) => (
+                                        <button
+                                            key={i}
+                                            className="w-full text-left px-4 py-3 text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-3"
+                                            onClick={() => selectRecent(term)}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                            {term}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="absolute top-full mt-2 left-0 flex gap-4 text-[10px] font-mono text-cyan-500/50 uppercase tracking-widest">
+                                <span>● Encryption: Active</span>
+                                <span>● Latency: 12ms</span>
+                                <span>● Node: PRO_CORE_V1</span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Decorative header element */}
-                    <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-[80px] group-hover:bg-primary/20 transition-colors duration-700" />
+                    <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] group-hover:bg-cyan-500/20 transition-colors duration-700 pointer-events-none" />
                 </header>
 
                 <div className="space-y-12">
                     <div className="flex items-center justify-between border-b border-white/5 pb-4">
                         <h2 className="text-sm font-mono text-slate-500 uppercase tracking-widest">
-                            {profiles.length} Profiles_Validated
+                            {filteredProfiles.length} Profiles_Found // Total: {profiles.length}
                         </h2>
                         <div className="flex gap-4 text-[10px] font-mono text-slate-600">
-                            <span>FILTER: ALL</span>
+                            <span className={searchQuery ? "text-cyan-500" : ""}>FILTER: {searchQuery ? "ACTIVE" : "NONE"}</span>
                             <span>SORT: IMPACT_DESC</span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-12">
-                        {profiles.map((profile) => (
-                            <ShowcaseCard key={profile.id} profile={profile} />
-                        ))}
-                    </div>
+                    {filteredProfiles.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-12">
+                            {filteredProfiles.map((profile) => (
+                                <ShowcaseCard key={profile.id} profile={profile} onProfileUpdate={fetchProfiles} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20 border border-dashed border-white/5 rounded-2xl">
+                            <p className="text-slate-500 font-mono text-sm">NO_MATCHING_DATA_FOUND</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

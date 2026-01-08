@@ -21,9 +21,14 @@ export default function Home() {
     load();
   }, []);
 
+  const refreshProfiles = async () => {
+    const data = await getClientShowcaseProfiles();
+    setProfiles(data);
+  };
+
   return (
     <div className="flex flex-col gap-0 -mx-4 sm:-mx-6 lg:-mx-8">
-      <NexoHero />
+      <NexoHero onRefresh={refreshProfiles} />
       <ActivityCounter />
       <RoleSelector />
       <ProfileVitrina profiles={profiles} />
