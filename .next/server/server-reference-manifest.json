@@ -1,0 +1,21 @@
+{
+  "node": {
+    "40302450032f464a8e3c1527ca7af7b5e50d4cf88a": {
+      "workers": {
+        "app/showcase/page": {
+          "moduleId": 74106,
+          "async": false,
+          "exportedName": "saveSearchQuery",
+          "filename": "lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/showcase/page": "action-browser"
+      },
+      "filename": "lib/actions.ts",
+      "exportedName": "saveSearchQuery"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "ShRpu6OhsROkE7jEffBmV4AtQnYHh1+61nH6A85rbrA="
+}

@@ -1,0 +1,20 @@
+{
+  "node": {
+    "40302450032f464a8e3c1527ca7af7b5e50d4cf88a": {
+      "workers": {
+        "app/showcase/page": {
+          "moduleId": 74106,
+          "async": false,
+          "exportedName": "saveSearchQuery",
+          "filename": "lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/showcase/page": "action-browser"
+      },
+      "exportedName": "saveSearchQuery",
+      "filename": "lib/actions.ts"
+    }
+  },
+  "edge": {}
+}
