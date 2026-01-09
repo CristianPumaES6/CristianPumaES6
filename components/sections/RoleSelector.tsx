@@ -34,7 +34,7 @@ function RoleCard({ title, description, icon, variant }: RoleCardProps) {
 
     return (
         <motion.a
-            href={isInternal ? "http://localhost:3000/showcase" : "#"}
+            href={isInternal ? "/showcase" : "#"}
             onClick={handleClick}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
