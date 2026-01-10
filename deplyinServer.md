@@ -69,8 +69,11 @@ npm run build
 Una vez termine el build, inicia la aplicación en segundo plano.
 
 ```bash
-# Iniciar la aplicación
-pm2 start npm run-prod.js --name "procard"
+# Iniciar la aplicación ejecutando directamente el script (RECOMENDADO)
+pm2 start run-prod.js --name "procard"
+
+# O usando npm (alternativa)
+pm2 start npm --name "procard" -- run prod
 
 # Guardar la lista de procesos para que inicien al reiniciar el servidor
 pm2 save
