@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { getClientShowcaseProfiles } from "@/lib/api";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
 
@@ -8,6 +9,7 @@ import { CreateProfileModal } from "@/components/CreateProfileModal";
 import { saveSearchQuery } from "@/lib/actions";
 
 export default function ShowcasePage() {
+    const { data: session } = useSession();
     const [profiles, setProfiles] = useState<any[]>([]);
     const [filteredProfiles, setFilteredProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -95,7 +97,9 @@ export default function ShowcasePage() {
             <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto space-y-12">
                 <header className="relative pt-12 pb-8 px-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-visible group">
                     <div className="absolute top-0 right-0 p-8 z-20">
-                        <CreateProfileModal onSuccess={fetchProfiles} />
+                        {session?.user && (
+                            <CreateProfileModal onSuccess={fetchProfiles} />
+                        )}
                     </div>
 
                     <div className="max-w-3xl relative z-10">

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { LucideIcon, Github, Linkedin, Mail, Youtube, FileText, CheckCircle2, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EditProfileModal } from "@/components/EditProfileModal";
@@ -13,6 +14,8 @@ interface Attribute {
 
 interface ShowcaseProfile {
     id: string;
+    userId: string;
+    slug?: string;
     industry: string;
     name: string;
     headline: string;
@@ -65,6 +68,7 @@ const SocialIcon = ({ name, url, className }: { name: string, url: string, class
 }
 
 export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcaseProfile, onProfileUpdate?: () => void }) => {
+    const { data: session } = useSession();
     const flavor = VARIANTS[profile.industry as keyof typeof VARIANTS] || VARIANTS.Tech;
 
     return (
@@ -139,8 +143,10 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
                     </div>
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
-                        <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
-                        <a href={`/showcase/${profile.id}`} className={cn(
+                        {session?.user?.id === profile.userId && (
+                            <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
+                        )}
+                        <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
                             "w-full py-2.5 px-6 rounded-lg text-sm font-medium text-center transition-all border",
                             profile.industry === 'Tech'
                                 ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"

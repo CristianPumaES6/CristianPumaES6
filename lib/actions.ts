@@ -4,6 +4,94 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
+import { signIn } from "@/lib/auth";
+import { AuthError } from "next-auth";
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
+import { auth } from '@/lib/auth'; // Import auth to get session
+
+// Utility import specific for server actions
+import { slugify } from '@/lib/utils';
+
+
+
+export async function authenticate(
+    prevState: string | undefined,
+    formData: FormData,
+) {
+    try {
+        await signIn('credentials', formData);
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials.';
+                default:
+                    return 'Something went wrong.';
+            }
+        }
+        throw error;
+    }
+}
+
+export async function registerUser(prevState: any, formData: FormData) {
+    const rawData = {
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+    }
+
+    const parsed = z
+        .object({
+            name: z.string().min(2),
+            email: z.string().email(),
+            password: z.string().min(6)
+        })
+        .safeParse(rawData);
+
+    if (!parsed.success) {
+        return { message: 'Invalid data. Please check your inputs.' };
+    }
+
+    const { name, email, password } = parsed.data;
+
+    try {
+        const existingUser = await db.user.findUnique({ where: { email } });
+        if (existingUser) {
+            return { message: 'User already exists with this email.' };
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await db.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+            },
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        return { message: 'Database Error: Failed to Create User.' };
+    }
+
+    // Attempt to log the user in immediately after registration? Or redirect to login.
+    // For simplicity, let's redirect to login for now (or handling auto-login via signIn might be tricky in pure server action without redirect loop if not careful)
+    // Actually, calling signIn here would work.
+    try {
+        await signIn('credentials', formData);
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return { message: 'Registration successful but auto-login failed.' };
+                default:
+                    return { message: 'Something went wrong.' };
+            }
+        }
+        throw error;
+    }
+}
+
 
 export async function getShowcaseProfiles() {
     try {
@@ -29,10 +117,15 @@ export async function getShowcaseProfiles() {
     }
 }
 
-export async function getProfileById(id: string) {
+export async function getProfileById(identifier: string) {
     try {
-        const profile = await db.profile.findUnique({
-            where: { id },
+        const profile = await db.profile.findFirst({
+            where: {
+                OR: [
+                    { id: identifier },
+                    { slug: identifier }
+                ]
+            },
             include: {
                 attributes: true,
                 socials: true,
@@ -57,6 +150,12 @@ export async function getProfileById(id: string) {
 }
 
 export async function createProfile(formData: FormData) {
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+        throw new Error('Unauthorized');
+    }
+    const userId = session.user.id; // Get userId from session
+
     const rawData = {
         name: formData.get('name') as string,
         firstName: formData.get('firstName') as string,
@@ -188,6 +287,8 @@ export async function createProfile(formData: FormData) {
         await db.profile.create({
             data: {
                 ...rawData,
+                slug: slugify(rawData.name),
+                userId: userId, // Link to user
                 attributes: {
                     create: stats
                 },
@@ -229,6 +330,17 @@ export async function createProfile(formData: FormData) {
 }
 
 export async function updateProfile(id: string, formData: FormData) {
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+        throw new Error('Unauthorized');
+    }
+
+    // Verify ownership
+    const existingProfile = await db.profile.findUnique({ where: { id } });
+    if (!existingProfile || existingProfile.userId !== session.user.id) {
+        throw new Error('Forbidden: You can only edit your own profile.');
+    }
+
     const rawData = {
         name: formData.get('name') as string,
         firstName: formData.get('firstName') as string,
@@ -245,7 +357,10 @@ export async function updateProfile(id: string, formData: FormData) {
         // 1. Update Basic Info
         await db.profile.update({
             where: { id },
-            data: rawData
+            data: {
+                ...rawData,
+                slug: slugify(rawData.name)
+            }
         })
 
         // 2. Update Attributes (Stats)

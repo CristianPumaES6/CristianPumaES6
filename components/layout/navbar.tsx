@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Terminal } from "lucide-react";
+import { Menu, X, Terminal, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { PROFILE } from "@/data/profile";
 
 export function Navbar() {
+    const { data: session } = useSession();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -55,11 +57,32 @@ export function Navbar() {
                             {link.name}
                         </Link>
                     ))}
-                    <Button variant="default" size="sm" asChild>
-                        <Link href="/login">
-                            LOGIN
-                        </Link>
-                    </Button>
+
+                    {session?.user ? (
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                                <User className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-bold text-primary">
+                                    {session.user.name || "Usuario"}
+                                </span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => signOut()}
+                                className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            >
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Salir
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button variant="default" size="sm" asChild>
+                            <Link href="/login">
+                                LOGIN
+                            </Link>
+                        </Button>
+                    )}
                 </nav>
 
                 {/* Mobile Toggle */}
@@ -85,7 +108,30 @@ export function Navbar() {
                                 {link.name}
                             </Link>
                         ))}
-                        <Button className="w-full" asChild>
+                        {session?.user ? (
+                            <div className="flex flex-col gap-2 p-2 border-t border-white/10 mt-2 pt-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <User className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-bold">{session.user.name}</span>
+                                </div>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => signOut()}
+                                    className="w-full justify-start"
+                                >
+                                    <LogOut className="w-4 h-4 mr-2" />
+                                    Cerrar Sesión
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button className="w-full" asChild>
+                                <Link href="/login">
+                                    LOGIN / REGISTER
+                                </Link>
+                            </Button>
+                        )}
+                        <Button variant="outline" className="w-full" asChild>
                             <Link href={PROFILE.socials[0].url} target="_blank">
                                 Contactar
                             </Link>
