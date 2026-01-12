@@ -170,14 +170,31 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
                                 </button>
                             </div>
                         )}
-                        <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
-                            "w-full py-2.5 px-6 rounded-lg text-sm font-medium text-center transition-all border",
-                            profile.industry === 'Tech'
-                                ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
-                                : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
-                        )}>
-                            View Full Profile
-                        </a>
+
+                        <div className="flex gap-3">
+                            <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
+                                "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center",
+                                profile.industry === 'Tech'
+                                    ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                    : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                            )}>
+                                Ver Perfil
+                            </a>
+                            <a
+                                href={`/cv/${profile.slug || profile.id}`}
+                                target="_blank"
+                                className={cn(
+                                    "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
+                                    profile.industry === 'Tech'
+                                        ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                        : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                                )}
+                                title="Descargar Curriculum Formato A4"
+                            >
+                                <FileText size={16} />
+                                <span>CV (A4)</span>
+                            </a>
+                        </div>
                         <button className={cn(
                             "w-full py-3 px-6 rounded-lg text-sm font-bold transition-all uppercase tracking-widest",
                             profile.industry === 'Tech'
