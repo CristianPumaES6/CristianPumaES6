@@ -9,10 +9,21 @@ async function main() {
 
     // Clean existing data
     await prisma.profile.deleteMany()
+    await prisma.user.deleteMany()
 
     // --- CRISTIAN PUMA (TECH) ---
+    const userCristian = await prisma.user.create({
+        data: {
+            name: "Cristian Puma",
+            email: "cristian.puma.es6@gmail.com",
+            password: await import('bcryptjs').then(bcrypt => bcrypt.hash('123456', 10)) // Optional: add a password
+        }
+    })
+
     const cristian = await prisma.profile.create({
         data: {
+            userId: userCristian.id,
+            slug: "cristian-puma",
             industry: "Tech",
             name: "Cristian Angel Puma Villalva",
             headline: "Desarrollador OutSystems & Full Stack",
@@ -113,8 +124,18 @@ async function main() {
     })
 
     // --- NAYELI CABALLA (LEGAL) ---
+    const userNayeli = await prisma.user.create({
+        data: {
+            name: "Nayeli Caballa",
+            email: "CABALLAARIANA4@GMAIL.COM",
+            // Password optional
+        }
+    })
+
     const nayeli = await prisma.profile.create({
         data: {
+            userId: userNayeli.id,
+            slug: "nayeli-caballa",
             industry: "Legal",
             name: "Nayeli Ariana Caballa Rejas",
             headline: "Estudiante de Derecho",

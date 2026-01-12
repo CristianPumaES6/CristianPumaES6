@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { LucideIcon, Github, Linkedin, Mail, Youtube, FileText, CheckCircle2, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EditProfileModal } from "@/components/EditProfileModal";
@@ -13,6 +14,8 @@ interface Attribute {
 
 interface ShowcaseProfile {
     id: string;
+    userId: string;
+    slug?: string;
     industry: string;
     name: string;
     headline: string;
@@ -65,6 +68,7 @@ const SocialIcon = ({ name, url, className }: { name: string, url: string, class
 }
 
 export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcaseProfile, onProfileUpdate?: () => void }) => {
+    const { data: session } = useSession();
     const flavor = VARIANTS[profile.industry as keyof typeof VARIANTS] || VARIANTS.Tech;
 
     return (
@@ -139,15 +143,58 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
                     </div>
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
-                        <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
-                        <a href={`/showcase/${profile.id}`} className={cn(
-                            "w-full py-2.5 px-6 rounded-lg text-sm font-medium text-center transition-all border",
-                            profile.industry === 'Tech'
-                                ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
-                                : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
-                        )}>
-                            View Full Profile
-                        </a>
+                        {session?.user?.id === profile.userId && (
+                            <div className="flex gap-2">
+                                <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
+                                <button
+                                    onClick={() => {
+                                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profile, null, 2));
+                                        const downloadAnchorNode = document.createElement('a');
+                                        downloadAnchorNode.setAttribute("href", dataStr);
+                                        downloadAnchorNode.setAttribute("download", `${profile.slug || "profile"}.json`);
+                                        document.body.appendChild(downloadAnchorNode); // required for firefox
+                                        downloadAnchorNode.click();
+                                        downloadAnchorNode.remove();
+                                    }}
+                                    className={cn(
+                                        "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
+                                        profile.industry === 'Tech' // Access flavor from prop or just use conditional
+                                            ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                            : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                                    )}
+                                    title="Export Profile JSON"
+                                >
+                                    <span className="sr-only">Export</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
+                                    Export
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
+                                "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center",
+                                profile.industry === 'Tech'
+                                    ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                    : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                            )}>
+                                Ver Perfil
+                            </a>
+                            <a
+                                href={`/cv/${profile.slug || profile.id}`}
+                                target="_blank"
+                                className={cn(
+                                    "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
+                                    profile.industry === 'Tech'
+                                        ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                        : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                                )}
+                                title="Descargar Curriculum Formato A4"
+                            >
+                                <FileText size={16} />
+                                <span>CV (A4)</span>
+                            </a>
+                        </div>
                         <button className={cn(
                             "w-full py-3 px-6 rounded-lg text-sm font-bold transition-all uppercase tracking-widest",
                             profile.industry === 'Tech'

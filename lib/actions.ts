@@ -4,6 +4,94 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
+import { signIn } from "@/lib/auth";
+import { AuthError } from "next-auth";
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
+import { auth } from '@/lib/auth'; // Import auth to get session
+
+// Utility import specific for server actions
+import { slugify } from '@/lib/utils';
+
+
+
+export async function authenticate(
+    prevState: string | undefined,
+    formData: FormData,
+) {
+    try {
+        await signIn('credentials', formData);
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials.';
+                default:
+                    return 'Something went wrong.';
+            }
+        }
+        throw error;
+    }
+}
+
+export async function registerUser(prevState: any, formData: FormData) {
+    const rawData = {
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+    }
+
+    const parsed = z
+        .object({
+            name: z.string().min(2),
+            email: z.string().email(),
+            password: z.string().min(6)
+        })
+        .safeParse(rawData);
+
+    if (!parsed.success) {
+        return { message: 'Invalid data. Please check your inputs.' };
+    }
+
+    const { name, email, password } = parsed.data;
+
+    try {
+        const existingUser = await db.user.findUnique({ where: { email } });
+        if (existingUser) {
+            return { message: 'User already exists with this email.' };
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await db.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+            },
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        return { message: 'Database Error: Failed to Create User.' };
+    }
+
+    // Attempt to log the user in immediately after registration? Or redirect to login.
+    // For simplicity, let's redirect to login for now (or handling auto-login via signIn might be tricky in pure server action without redirect loop if not careful)
+    // Actually, calling signIn here would work.
+    try {
+        await signIn('credentials', formData);
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return { message: 'Registration successful but auto-login failed.' };
+                default:
+                    return { message: 'Something went wrong.' };
+            }
+        }
+        throw error;
+    }
+}
+
 
 export async function getShowcaseProfiles() {
     try {
@@ -29,10 +117,15 @@ export async function getShowcaseProfiles() {
     }
 }
 
-export async function getProfileById(id: string) {
+export async function getProfileById(identifier: string) {
     try {
-        const profile = await db.profile.findUnique({
-            where: { id },
+        const profile = await db.profile.findFirst({
+            where: {
+                OR: [
+                    { id: identifier },
+                    { slug: identifier }
+                ]
+            },
             include: {
                 attributes: true,
                 socials: true,
@@ -57,6 +150,12 @@ export async function getProfileById(id: string) {
 }
 
 export async function createProfile(formData: FormData) {
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+        throw new Error('Unauthorized');
+    }
+    const userId = session.user.id; // Get userId from session
+
     const rawData = {
         name: formData.get('name') as string,
         firstName: formData.get('firstName') as string,
@@ -188,6 +287,8 @@ export async function createProfile(formData: FormData) {
         await db.profile.create({
             data: {
                 ...rawData,
+                slug: slugify(rawData.name),
+                userId: userId, // Link to user
                 attributes: {
                     create: stats
                 },
@@ -229,6 +330,17 @@ export async function createProfile(formData: FormData) {
 }
 
 export async function updateProfile(id: string, formData: FormData) {
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+        throw new Error('Unauthorized');
+    }
+
+    // Verify ownership
+    const existingProfile = await db.profile.findUnique({ where: { id } });
+    if (!existingProfile || existingProfile.userId !== session.user.id) {
+        throw new Error('Forbidden: You can only edit your own profile.');
+    }
+
     const rawData = {
         name: formData.get('name') as string,
         firstName: formData.get('firstName') as string,
@@ -245,7 +357,10 @@ export async function updateProfile(id: string, formData: FormData) {
         // 1. Update Basic Info
         await db.profile.update({
             where: { id },
-            data: rawData
+            data: {
+                ...rawData,
+                slug: slugify(rawData.name)
+            }
         })
 
         // 2. Update Attributes (Stats)
@@ -432,5 +547,113 @@ export async function saveSearchQuery(query: string) {
         })
     } catch (e) {
         console.error("Failed to save search log:", e)
+    }
+}
+
+export async function importProfile(jsonContent: string) {
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+        return { success: false, error: 'Unauthorized: Please login to import profiles.' }
+    }
+
+    try {
+        console.log("Importing profile, content length:", jsonContent?.length);
+        const data = JSON.parse(jsonContent);
+        console.log("Parsed data keys:", Object.keys(data));
+
+        // Basic validation with specific error messages
+        if (!data.name) return { success: false, error: 'Invalid Structure: Missing field "name".' };
+        if (!data.email) return { success: false, error: 'Invalid Structure: Missing field "email".' };
+        if (!data.industry) return { success: false, error: 'Invalid Structure: Missing field "industry".' };
+
+        // Clean up data for Prisma creation
+        // We remove IDs to create new records
+        // We remove userId to assign to current user
+        const {
+            id, userId, createdAt, updatedAt, slug,
+            attributes, socials, experiences, projects, skillCategories, education, certifications,
+            ...primitiveFields
+        } = data;
+
+        // Generate a new slug just in case (unique constraint)
+        let newSlug = data.slug || slugify(data.name);
+        const existingSlug = await db.profile.findUnique({ where: { slug: newSlug } });
+        if (existingSlug) {
+            newSlug = `${newSlug}-${Date.now()}`;
+        }
+
+        console.log("Creating profile with slug:", newSlug);
+
+        await db.profile.create({
+            data: {
+                ...primitiveFields,
+                slug: newSlug,
+                userId: session.user.id,
+                attributes: {
+                    create: attributes?.map((x: any) => ({ label: x.label, value: x.value })) || []
+                },
+                socials: {
+                    create: socials?.map((x: any) => ({ platform: x.platform, url: x.url, iconName: x.iconName })) || []
+                },
+                experiences: {
+                    create: experiences?.map((x: any) => ({
+                        title: x.title,
+                        organization: x.organization,
+                        period: x.period,
+                        type: x.type,
+                        highlights: {
+                            create: x.highlights?.map((h: any) => ({ text: h.text })) || []
+                        }
+                    })) || []
+                },
+                projects: {
+                    create: projects?.map((x: any) => ({
+                        title: x.title,
+                        client: x.client,
+                        type: x.type,
+                        description: x.description,
+                        solution: x.solution,
+                        outcome: x.outcome,
+                        imageUrl: x.imageUrl,
+                        url: x.url,
+                        highlight: x.highlight,
+                        tags: {
+                            create: x.tags?.map((t: any) => ({ name: t.name })) || []
+                        }
+                    })) || []
+                },
+                skillCategories: {
+                    create: skillCategories?.map((x: any) => ({
+                        name: x.name,
+                        items: {
+                            create: x.items?.map((i: any) => ({ name: i.name })) || []
+                        }
+                    })) || []
+                },
+                education: {
+                    create: education?.map((x: any) => ({
+                        institution: x.institution,
+                        degree: x.degree,
+                        period: x.period,
+                        status: x.status
+                    })) || []
+                },
+                certifications: {
+                    create: certifications?.map((x: any) => ({
+                        title: x.title,
+                        provider: x.provider,
+                        date: x.date,
+                        url: x.url
+                    })) || []
+                }
+            }
+        });
+
+        revalidatePath('/showcase');
+        return { success: true };
+
+    } catch (error) {
+        console.error("Import error:", error);
+        return { success: false, error: 'Failed to import profile. Invalid JSON or database error.' };
     }
 }
