@@ -549,3 +549,111 @@ export async function saveSearchQuery(query: string) {
         console.error("Failed to save search log:", e)
     }
 }
+
+export async function importProfile(jsonContent: string) {
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+        return { success: false, error: 'Unauthorized: Please login to import profiles.' }
+    }
+
+    try {
+        console.log("Importing profile, content length:", jsonContent?.length);
+        const data = JSON.parse(jsonContent);
+        console.log("Parsed data keys:", Object.keys(data));
+
+        // Basic validation with specific error messages
+        if (!data.name) return { success: false, error: 'Invalid Structure: Missing field "name".' };
+        if (!data.email) return { success: false, error: 'Invalid Structure: Missing field "email".' };
+        if (!data.industry) return { success: false, error: 'Invalid Structure: Missing field "industry".' };
+
+        // Clean up data for Prisma creation
+        // We remove IDs to create new records
+        // We remove userId to assign to current user
+        const {
+            id, userId, createdAt, updatedAt, slug,
+            attributes, socials, experiences, projects, skillCategories, education, certifications,
+            ...primitiveFields
+        } = data;
+
+        // Generate a new slug just in case (unique constraint)
+        let newSlug = data.slug || slugify(data.name);
+        const existingSlug = await db.profile.findUnique({ where: { slug: newSlug } });
+        if (existingSlug) {
+            newSlug = `${newSlug}-${Date.now()}`;
+        }
+
+        console.log("Creating profile with slug:", newSlug);
+
+        await db.profile.create({
+            data: {
+                ...primitiveFields,
+                slug: newSlug,
+                userId: session.user.id,
+                attributes: {
+                    create: attributes?.map((x: any) => ({ label: x.label, value: x.value })) || []
+                },
+                socials: {
+                    create: socials?.map((x: any) => ({ platform: x.platform, url: x.url, iconName: x.iconName })) || []
+                },
+                experiences: {
+                    create: experiences?.map((x: any) => ({
+                        title: x.title,
+                        organization: x.organization,
+                        period: x.period,
+                        type: x.type,
+                        highlights: {
+                            create: x.highlights?.map((h: any) => ({ text: h.text })) || []
+                        }
+                    })) || []
+                },
+                projects: {
+                    create: projects?.map((x: any) => ({
+                        title: x.title,
+                        client: x.client,
+                        type: x.type,
+                        description: x.description,
+                        solution: x.solution,
+                        outcome: x.outcome,
+                        imageUrl: x.imageUrl,
+                        url: x.url,
+                        highlight: x.highlight,
+                        tags: {
+                            create: x.tags?.map((t: any) => ({ name: t.name })) || []
+                        }
+                    })) || []
+                },
+                skillCategories: {
+                    create: skillCategories?.map((x: any) => ({
+                        name: x.name,
+                        items: {
+                            create: x.items?.map((i: any) => ({ name: i.name })) || []
+                        }
+                    })) || []
+                },
+                education: {
+                    create: education?.map((x: any) => ({
+                        institution: x.institution,
+                        degree: x.degree,
+                        period: x.period,
+                        status: x.status
+                    })) || []
+                },
+                certifications: {
+                    create: certifications?.map((x: any) => ({
+                        title: x.title,
+                        provider: x.provider,
+                        date: x.date,
+                        url: x.url
+                    })) || []
+                }
+            }
+        });
+
+        revalidatePath('/showcase');
+        return { success: true };
+
+    } catch (error) {
+        console.error("Import error:", error);
+        return { success: false, error: 'Failed to import profile. Invalid JSON or database error.' };
+    }
+}

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { getClientShowcaseProfiles } from "@/lib/api";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
+import { Upload } from "lucide-react";
 
 import { CreateProfileModal } from "@/components/CreateProfileModal";
-import { saveSearchQuery } from "@/lib/actions";
+import { saveSearchQuery, importProfile } from "@/lib/actions";
 
 export default function ShowcasePage() {
     const { data: session } = useSession();
@@ -16,6 +17,8 @@ export default function ShowcasePage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [showRecent, setShowRecent] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchProfiles = async () => {
         const data = await getClientShowcaseProfiles();
@@ -75,6 +78,32 @@ export default function ShowcasePage() {
         setShowRecent(false);
     };
 
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const content = event.target?.result as string;
+            try {
+                // Basic check if it's JSON
+                JSON.parse(content);
+                const result = await importProfile(content);
+                if (result.success) {
+                    alert("Profile imported successfully!");
+                    fetchProfiles(); // Refresh list
+                } else {
+                    alert(`Import failed: ${result.error}`);
+                }
+            } catch (err) {
+                alert("Invalid JSON file.");
+            }
+        };
+        reader.readAsText(file);
+        // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white font-mono">
@@ -96,9 +125,26 @@ export default function ShowcasePage() {
 
             <div className="relative z-10 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto space-y-12">
                 <header className="relative pt-12 pb-8 px-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-visible group">
-                    <div className="absolute top-0 right-0 p-8 z-20">
+                    <div className="absolute top-0 right-0 p-8 z-20 flex items-center gap-4">
                         {session?.user && (
-                            <CreateProfileModal onSuccess={fetchProfiles} />
+                            <>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept=".json"
+                                    onChange={handleImport}
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex items-center gap-2 bg-slate-900/50 text-slate-300 px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all border border-white/10 font-bold group backdrop-blur-sm"
+                                    title="Import JSON Profile"
+                                >
+                                    <Upload size={18} className="group-hover:scale-110 transition-transform" />
+                                    <span className="hidden sm:inline text-xs uppercase tracking-widest">Importar</span>
+                                </button>
+                                <CreateProfileModal onSuccess={fetchProfiles} />
+                            </>
                         )}
                     </div>
 

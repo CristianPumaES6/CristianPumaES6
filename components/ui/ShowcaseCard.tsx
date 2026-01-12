@@ -144,7 +144,31 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
                         {session?.user?.id === profile.userId && (
-                            <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
+                            <div className="flex gap-2">
+                                <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
+                                <button
+                                    onClick={() => {
+                                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profile, null, 2));
+                                        const downloadAnchorNode = document.createElement('a');
+                                        downloadAnchorNode.setAttribute("href", dataStr);
+                                        downloadAnchorNode.setAttribute("download", `${profile.slug || "profile"}.json`);
+                                        document.body.appendChild(downloadAnchorNode); // required for firefox
+                                        downloadAnchorNode.click();
+                                        downloadAnchorNode.remove();
+                                    }}
+                                    className={cn(
+                                        "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
+                                        profile.industry === 'Tech' // Access flavor from prop or just use conditional
+                                            ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                            : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                                    )}
+                                    title="Export Profile JSON"
+                                >
+                                    <span className="sr-only">Export</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
+                                    Export
+                                </button>
+                            </div>
                         )}
                         <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
                             "w-full py-2.5 px-6 rounded-lg text-sm font-medium text-center transition-all border",
