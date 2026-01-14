@@ -101,13 +101,18 @@ export async function getShowcaseProfiles() {
                 socials: true,
                 experiences: true,
                 projects: {
-                    include: { tags: true }
+                    include: { tags: true },
+                    orderBy: { order: 'asc' }
                 },
                 skillCategories: {
                     include: { items: true }
                 },
-                education: true,
-                certifications: true
+                education: {
+                    orderBy: { order: 'asc' }
+                },
+                certifications: {
+                    orderBy: { order: 'asc' }
+                }
             }
         })
         return profiles
@@ -133,13 +138,18 @@ export async function getProfileById(identifier: string) {
                     include: { highlights: true }
                 },
                 projects: {
-                    include: { tags: true }
+                    include: { tags: true },
+                    orderBy: { order: 'asc' }
                 },
                 skillCategories: {
                     include: { items: true }
                 },
-                education: true,
-                certifications: true
+                education: {
+                    orderBy: { order: 'asc' }
+                },
+                certifications: {
+                    orderBy: { order: 'asc' }
+                }
             }
         })
         return profile
@@ -242,20 +252,26 @@ export async function createProfile(formData: FormData) {
 
         for (let i = 0; i < projectsData.length; i++) {
             const p = projectsData[i]
-            let imageUrl: string | null = null
+            let mainImageUrl: string | null = null
+            const projectImagesCreate = []
 
-            // Check for uploaded file corresponding to this index
-            const projectImage = formData.get(`project_image_${i}`) as File | null
+            // Check for uploaded files (multiple)
+            const projectFiles = formData.getAll(`project_image_${i}`) as File[]
 
-            if (projectImage && projectImage.size > 0 && projectImage.name !== 'undefined') {
-                const bytes = await projectImage.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const uploadDir = join(process.cwd(), 'public', 'uploads')
-                await mkdir(uploadDir, { recursive: true })
-                const filename = `${Date.now()}-${i}-${projectImage.name.replace(/\s/g, '_')}`
-                const filepath = join(uploadDir, filename)
-                await writeFile(filepath, buffer)
-                imageUrl = `/uploads/${filename}`
+            for (const file of projectFiles) {
+                if (file && file.size > 0 && file.name !== 'undefined') {
+                    const bytes = await file.arrayBuffer()
+                    const buffer = Buffer.from(bytes)
+                    const uploadDir = join(process.cwd(), 'public', 'uploads')
+                    await mkdir(uploadDir, { recursive: true })
+                    const filename = `${Date.now()}-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s/g, '_')}`
+                    const filepath = join(uploadDir, filename)
+                    await writeFile(filepath, buffer)
+                    const url = `/uploads/${filename}`
+
+                    projectImagesCreate.push({ url })
+                    if (!mainImageUrl) mainImageUrl = url // First one is cover
+                }
             }
 
             projectsCreate.push({
@@ -265,11 +281,15 @@ export async function createProfile(formData: FormData) {
                 description: p.desc || 'No challenge provided.',
                 solution: p.solution || 'No solution details.',
                 outcome: p.outcome || 'Successful deployment.',
-                imageUrl: imageUrl,
+                imageUrl: mainImageUrl, // Fallback cover
                 url: p.url || '',
                 highlight: true,
+                order: p.order || 0,
                 tags: {
                     create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
+                },
+                images: {
+                    create: projectImagesCreate
                 }
             })
         }
@@ -281,7 +301,8 @@ export async function createProfile(formData: FormData) {
             institution: edu.institution,
             degree: edu.degree,
             period: edu.period,
-            status: edu.status || 'Completed'
+            status: edu.status || 'Completed',
+            order: edu.order || 0 // Save Order
         }))
 
         await db.profile.create({
@@ -312,7 +333,8 @@ export async function createProfile(formData: FormData) {
                             title: c.title,
                             provider: c.provider,
                             date: c.date,
-                            url: c.url || ''
+                            url: c.url || '',
+                            order: c.order || 0 // Save Order
                         }));
                     })()
                 },
@@ -328,6 +350,8 @@ export async function createProfile(formData: FormData) {
         return { success: false }
     }
 }
+
+// ... updateProfile changes below
 
 export async function updateProfile(id: string, formData: FormData) {
     const session = await auth();
@@ -490,6 +514,7 @@ export async function updateProfile(id: string, formData: FormData) {
                     imageUrl: imageUrl,
                     url: p.url || '',
                     highlight: true,
+                    order: p.order || 0, // Save order
                     tags: {
                         create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
                     }
@@ -506,7 +531,8 @@ export async function updateProfile(id: string, formData: FormData) {
             institution: edu.institution,
             degree: edu.degree,
             period: edu.period,
-            status: edu.status || 'Completed'
+            status: edu.status || 'Completed',
+            order: edu.order || 0 // Save order
         }))
 
         if (educationCreate.length > 0) {
@@ -522,7 +548,8 @@ export async function updateProfile(id: string, formData: FormData) {
             title: cert.title,
             provider: cert.provider,
             date: cert.date,
-            url: cert.url || ''
+            url: cert.url || '',
+            order: cert.order || 0 // Save order
         }))
 
         if (certificationsCreate.length > 0) {

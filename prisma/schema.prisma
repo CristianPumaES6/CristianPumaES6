@@ -102,10 +102,19 @@ model Project {
   imageUrl    String?
   url         String?      // Project URL
   highlight   Boolean      @default(false)
+  order       Int          @default(0)
   
   tags        ProjectTag[]
+  images      ProjectImage[]
   profileId   String
   profile     Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model ProjectImage {
+  id        String  @id @default(uuid())
+  url       String
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model ProjectTag {
@@ -121,6 +130,7 @@ model Education {
   degree      String
   period      String
   status      String?
+  order       Int     @default(0)
   profileId   String
   profile     Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
@@ -131,6 +141,7 @@ model Certification {
   provider  String
   date      String
   url       String? // New URL field
+  order     Int     @default(0)
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

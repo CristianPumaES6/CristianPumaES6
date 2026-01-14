@@ -1,17 +1,21 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { updateClientProfile } from '@/lib/api'
-import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap, Award, ChevronDown, ChevronUp, Globe, Gavel, FileText } from 'lucide-react'
+import { X, Pencil, Server, Scale, Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, FolderGit2, Plus, Trash2, Image as ImageIcon, CheckCircle2, GraduationCap, Award, ChevronDown, ChevronUp, Globe, Gavel, FileText, GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { Reorder } from 'framer-motion'
 import { TECH_SPECIALTIES, LEGAL_SPECIALTIES, TECH_STACK_CATEGORIES, LEGAL_STACK_CATEGORIES, TECH_OPTIONS, LEGAL_OPTIONS, STATS_CONFIG } from '@/data/profile-constants'
+
+import { useToast } from '@/components/ui/toast'
 
 export function EditProfileModal({ profile, onSuccess }: { profile: any, onSuccess?: () => void }) {
     const [isOpen, setIsOpen] = useState(false)
     const [step, setStep] = useState(1)
     const [isPending, setIsPending] = useState(false)
     const router = useRouter()
+    const { showToast } = useToast()
 
     // --- STATE MANAGEMENT ---
     const [industry, setIndustry] = useState(profile.industry || 'Tech')
@@ -32,11 +36,11 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         "Backend & Arquitectura": [],
         "Bases de Datos": [],
         "DevOps & Infra": [],
-        "Frontend & Diseño": [],
-        "Áreas de Práctica": [],
+        "Frontend & DiseÃ±o": [],
+        "Ãreas de PrÃ¡ctica": [],
         "Herramientas LegalTech": [],
         "Habilidades Profesionales": [],
-        "Idiomas & Jurisdicción": []
+        "Idiomas & JurisdicciÃ³n": []
     })
 
     // Projects State
@@ -49,8 +53,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         solution: '',
         outcome: '',
         tags: [] as string[],
-        imageFile: null as File | null,
+        imageFile: null as File | null, // Deprecated but kept for type safety if ref exists
+        imageFiles: [] as File[], // New multiple support
         existingImageUrl: null as string | null,
+        images: [] as any[], // Existing gallery images
         url: '' as string // New URL field
     })
 
@@ -96,11 +102,11 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     "Backend & Arquitectura": [],
                     "Bases de Datos": [],
                     "DevOps & Infra": [],
-                    "Frontend & Diseño": [],
-                    "Áreas de Práctica": [],
+                    "Frontend & DiseÃ±o": [],
+                    "Ãreas de PrÃ¡ctica": [],
                     "Herramientas LegalTech": [],
                     "Habilidades Profesionales": [],
-                    "Idiomas & Jurisdicción": []
+                    "Idiomas & JurisdicciÃ³n": []
                 }
                 profile.skillCategories.forEach((cat: any) => {
                     if (stackData[cat.name] !== undefined) {
@@ -113,94 +119,124 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
             // Load Projects
             if (profile.projects) {
-                const loadedProjects = profile.projects.map((p: any) => ({
-                    title: p.title,
-                    client: p.client,
-                    type: p.type || 'Laboral',
-                    desc: p.description,
-                    solution: p.solution,
-                    outcome: p.outcome,
-                    tags: p.tags ? p.tags.map((t: any) => t.name) : [],
-                    existingImageUrl: p.imageUrl,
-                    url: p.url || ''
-                }))
+                const loadedProjects = profile.projects
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((p: any) => ({
+                        _id: p.id || Math.random().toString(36).substr(2, 9),
+                        title: p.title,
+                        client: p.client,
+                        type: p.type || 'Laboral',
+                        desc: p.description,
+                        solution: p.solution,
+                        outcome: p.outcome,
+                        tags: p.tags ? p.tags.map((t: any) => t.name) : [],
+                        existingImageUrl: p.imageUrl,
+                        // Load existing gallery images
+                        images: p.images || [], // [{url: '...'}, ...]
+                        url: p.url || ''
+                    }))
                 setProjects(loadedProjects)
             }
 
+            // ... (rest of loading logic) ...
+
+            // ... (Helpers unchanged) ...
+
+
             // Load Education
             if (profile.education) {
-                setEducation(profile.education.map((edu: any) => ({
-                    institution: edu.institution,
-                    degree: edu.degree,
-                    period: edu.period,
-                    status: edu.status
-                })))
+                const loadedEducation = profile.education
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((edu: any) => ({
+                        _id: edu.id || Math.random().toString(36).substr(2, 9),
+                        institution: edu.institution,
+                        degree: edu.degree,
+                        period: edu.period,
+                        status: edu.status
+                    }))
+                setEducation(loadedEducation)
             }
 
             // Load Certifications
             if (profile.certifications) {
-                setCertifications(profile.certifications.map((cert: any) => ({
-                    title: cert.title,
-                    provider: cert.provider,
-                    date: cert.date ? String(cert.date) : '',
-                    url: cert.url || ''
-                })))
+                const loadedCertifications = profile.certifications
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((cert: any) => ({
+                        _id: cert.id || Math.random().toString(36).substr(2, 9),
+                        title: cert.title,
+                        provider: cert.provider,
+                        date: cert.date,
+                        url: cert.url
+                    }))
+                setCertifications(loadedCertifications)
+            }
+
+            // Load Stats
+            if (profile.attributes) {
+                const initialStats: Record<string, string> = {}
+                profile.attributes.forEach((attr: any) => {
+                    if (attr.type === 'Stat') {
+                        initialStats[attr.name] = attr.value
+                    }
+                })
+                setStatsValues(initialStats)
             }
         }
     }, [isOpen, profile])
 
-
-    // Helpers
-    const getStatValue = (name: string) => {
-        const labelMap: any = {
-            'ranking': 'RANKING', 'experience': 'EXPERIENCIA', 'level': 'LEVEL', 'stack': 'STACK',
-            'ciclo': 'CICLO', 'merito': 'MÉRITO', 'disponibilidad': 'DISPONIBILIDAD'
-        }
-        const label = labelMap[name] || name.toUpperCase()
-        const attr = profile.attributes?.find((a: any) => a.label === label)
-        return attr ? attr.value : ''
-    }
-
+    // --- HELPERS ---
     const getSocialUrl = (platform: string) => {
-        const social = profile.socials?.find((s: any) => s.platform.toLowerCase() === platform.toLowerCase())
-        return social ? social.url : ''
+        const socialLink = profile.socials?.find((link: any) => link.platform === platform)
+        return socialLink ? socialLink.url : ''
     }
 
-    const handleSpecialtyChange = (value: string) => {
-        if (selectedSpecialties.includes(value)) {
-            setSelectedSpecialties(selectedSpecialties.filter(s => s !== value))
-        } else {
-            setSelectedSpecialties([...selectedSpecialties, value])
-        }
+    const getStatValue = (statName: string) => {
+        return statsValues[statName] || profile.attributes?.find((attr: any) => attr.type === 'Stat' && attr.name === statName)?.value || ''
+    }
+
+    const handleSpecialtyChange = (val: string) => {
+        setSelectedSpecialties(prev =>
+            prev.includes(val) ? prev.filter(s => s !== val) : [...prev, val]
+        )
     }
 
     const toggleStackItem = (category: string, item: string) => {
         setSelectedStack(prev => {
             const currentItems = prev[category] || []
-            const newItems = currentItems.includes(item)
-                ? currentItems.filter(i => i !== item)
-                : [...currentItems, item]
-            return { ...prev, [category]: newItems }
+            if (currentItems.includes(item)) {
+                return {
+                    ...prev,
+                    [category]: currentItems.filter(i => i !== item)
+                }
+            } else {
+                return {
+                    ...prev,
+                    [category]: [...currentItems, item]
+                }
+            }
         })
     }
 
     // Project Logic
     const handleAddProject = () => {
         if (!currentProject.title) return;
-        setProjects([...projects, { ...currentProject }])
+        setProjects([...projects, { ...currentProject, _id: Math.random().toString(36).substr(2, 9) }])
         setCurrentProject({
-            title: '', client: '', type: 'Laboral', desc: '', solution: '', outcome: '', tags: [], imageFile: null, existingImageUrl: null, url: ''
+            title: '', client: '', type: 'Laboral', desc: '', solution: '', outcome: '', tags: [], imageFile: null, imageFiles: [], existingImageUrl: null, images: [], url: ''
         })
         setShowProjList(true)
     }
+
     const removeProject = (index: number) => {
         setProjects(projects.filter((_, i) => i !== index))
     }
+
     const editProject = (index: number) => {
-        const itemToEdit = projects[index]
-        setCurrentProject(itemToEdit)
+        const projectToEdit = projects[index]
+        setCurrentProject({ ...projectToEdit, imageFiles: [], imageFile: null }) // Clear new files when editing existing
         removeProject(index)
     }
+
     const toggleTech = (tech: string) => {
         setCurrentProject(prev => {
             const tags = prev.tags.includes(tech)
@@ -212,39 +248,42 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
     // Education Logic
     const handleAddEducation = () => {
-        if (!currentEdu.institution || !currentEdu.degree) return;
-        setEducation([...education, { ...currentEdu }])
+        if (!currentEdu.institution || !currentEdu.degree || !currentEdu.period) return;
+        setEducation([...education, { ...currentEdu, _id: Math.random().toString(36).substr(2, 9) }])
         setCurrentEdu({ institution: '', degree: '', period: '', status: 'Completed' })
         setShowEduList(true)
     }
+
     const removeEducation = (index: number) => {
         setEducation(education.filter((_, i) => i !== index))
     }
+
     const editEducation = (index: number) => {
-        const itemToEdit = education[index]
-        setCurrentEdu(itemToEdit)
+        const eduToEdit = education[index]
+        setCurrentEdu(eduToEdit)
         removeEducation(index)
     }
 
     // Certifications Logic
     const handleAddCertification = () => {
-        if (!currentCert.title || !currentCert.provider) return;
-        setCertifications([...certifications, { ...currentCert }])
+        if (!currentCert.title || !currentCert.provider || !currentCert.date) return;
+        setCertifications([...certifications, { ...currentCert, _id: Math.random().toString(36).substr(2, 9) }])
         setCurrentCert({ title: '', provider: '', date: '', url: '' })
         setShowCertList(true)
     }
+
     const removeCertification = (index: number) => {
         setCertifications(certifications.filter((_, i) => i !== index))
     }
+
     const editCertification = (index: number) => {
-        const itemToEdit = certifications[index]
-        setCurrentCert(itemToEdit)
+        const certToEdit = certifications[index]
+        setCurrentCert(certToEdit)
         removeCertification(index)
     }
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
-        // Allow all 7 steps for both Tech and Legal
         const maxStep = 7;
         if (step < maxStep) setStep(step + 1);
     }
@@ -264,24 +303,24 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         // Inject Education
         let finalEducation = [...education]
         if (currentEdu.institution) {
-            finalEducation.push(currentEdu)
+            finalEducation.push({ ...currentEdu, _id: 'temp_new' })
         }
-        formData.append('education_data', JSON.stringify(finalEducation))
+        formData.append('education_data', JSON.stringify(finalEducation.map((item, idx) => ({ ...item, order: idx }))))
 
         // Inject Certifications
         let finalCertifications = [...certifications]
         if (currentCert.title) {
-            finalCertifications.push(currentCert)
+            finalCertifications.push({ ...currentCert, _id: 'temp_new' })
         }
-        formData.append('certifications_data', JSON.stringify(finalCertifications))
+        formData.append('certifications_data', JSON.stringify(finalCertifications.map((item, idx) => ({ ...item, order: idx }))))
 
         // Inject Projects
         const finalProjects = [...projects]
         if (currentProject.title) {
-            finalProjects.push(currentProject)
+            finalProjects.push({ ...currentProject, _id: 'temp_new' })
         }
 
-        formData.append('projects_data', JSON.stringify(finalProjects.map(p => ({
+        formData.append('projects_data', JSON.stringify(finalProjects.map((p, index) => ({
             title: p.title,
             client: p.client,
             type: p.type,
@@ -290,21 +329,37 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             outcome: p.outcome,
             tags: p.tags,
             existingImageUrl: p.existingImageUrl,
-            url: p.url
+            images: p.images, // Pass back existing gallery
+            url: p.url,
+            order: index
         }))))
 
         finalProjects.forEach((p, index) => {
-            if (p.imageFile) {
+            // New Multiple Files Logic
+            if (p.imageFiles && p.imageFiles.length > 0) {
+                p.imageFiles.forEach((file: File) => {
+                    formData.append(`project_image_${index}`, file)
+                })
+            } else if (p.imageFile) {
+                // Fallback for singular legacy state
                 formData.append(`project_image_${index}`, p.imageFile)
             }
         })
 
-        const res = await updateClientProfile(profile.id, formData)
+        try {
+            const res = await updateClientProfile(profile.id, formData)
 
-        setIsPending(false)
-        if (res.success) {
-            setIsOpen(false)
-            router.refresh()
+            setIsPending(false)
+            if (res.success) {
+                setIsOpen(false)
+                showToast("Profile identity updated successfully. Synchronization complete.", "success")
+                router.refresh()
+            } else {
+                showToast(res.error || "Failed to update profile. Please try again.", "error")
+            }
+        } catch (error) {
+            setIsPending(false)
+            showToast("Critical system error during update.", "error")
         }
     }
 
@@ -313,10 +368,15 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         if (isOpen) setMounted(true);
     }, [isOpen]);
 
+    const handleOpen = () => {
+        setIsOpen(true);
+        showToast("Secure Edit Mode Initialized", "info")
+    }
+
     if (!isOpen) {
         return (
             <button
-                onClick={() => setIsOpen(true)}
+                onClick={handleOpen}
                 className="w-full py-2.5 px-4 bg-slate-900 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all font-medium group mb-2 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
             >
                 <Pencil size={14} className="group-hover:rotate-12 transition-transform" />
@@ -342,10 +402,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                             <Pencil size={20} className="text-cyan-500" />
                             {step === 1 && 'Edit Basic Identity'}
                             {step === 2 && 'Excellence Metrics'}
-                            {step === 3 && (industry === 'Tech' ? 'Technical Specialties' : 'Áreas de Especialización')}
-                            {step === 4 && (industry === 'Tech' ? 'Arsenal Tecnológico' : 'Competencias Jurídicas')}
+                            {step === 3 && (industry === 'Tech' ? 'Technical Specialties' : 'Ãreas de EspecializaciÃ³n')}
+                            {step === 4 && (industry === 'Tech' ? 'Arsenal TecnolÃ³gico' : 'Competencias JurÃ­dicas')}
                             {step === 5 && 'Academic Foundation'}
-                            {step === 6 && (industry === 'Tech' ? 'Cursos y Certificaciones' : 'Formación Continua')}
+                            {step === 6 && (industry === 'Tech' ? 'Cursos y Certificaciones' : 'FormaciÃ³n Continua')}
                             {step === 7 && (industry === 'Tech' ? 'Project Portfolio' : 'Experiencia & Casos')}
                         </h2>
                         <p className="text-[10px] text-cyan-500 font-mono uppercase tracking-[0.2em] mt-1 opacity-70">Configuration // Phase.{step < 10 ? `0${step}` : step} // Mode.Update</p>
@@ -514,22 +574,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                         {showEduList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
                                     </div>
 
-                                    {showEduList && education.map((edu, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{edu.institution}</div>
-                                                <div className="text-xs text-slate-500 font-mono">{edu.degree} • {edu.period}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
-                                                    <Pencil size={16} />
-                                                </button>
-                                                <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    {showEduList && (
+                                        <Reorder.Group axis="y" values={education} onReorder={setEducation} className="space-y-3">
+                                            {education.map((edu, idx) => (
+                                                <Reorder.Item key={edu._id} value={edu} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                    <div className="flex items-center gap-3">
+                                                        <GripVertical size={16} className="text-slate-600" />
+                                                        <div>
+                                                            <div className="font-bold text-white text-sm">{edu.institution}</div>
+                                                            <div className="text-xs text-slate-500 font-mono">{edu.degree} â€¢ {edu.period}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                        <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </Reorder.Item>
+                                            ))}
+                                        </Reorder.Group>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-10 bg-slate-950/20 rounded-2xl border border-dashed border-white/10 mb-6">
@@ -540,63 +607,59 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                             <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
                                 <h3 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <GraduationCap size={18} className="text-cyan-500" />
-                                    {education.length > 0 ? 'Agregar otra formación' : 'Registrar educación'}
+                                    {education.length > 0 ? 'Agregar otra formaciÃ³n' : 'Registrar educaciÃ³n'}
                                 </h3>
 
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Institución <span className="text-red-500">*</span></label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">InstituciÃ³n <span className="text-red-500">*</span></label>
                                         <input
                                             value={currentEdu.institution}
                                             onChange={(e) => setCurrentEdu({ ...currentEdu, institution: e.target.value })}
                                             className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentEdu.institution && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
-                                            placeholder="Ej: UMA - Universidad María Auxiliadora"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Título / Especialidad <span className="text-red-500">*</span></label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">TÃ­tulo/Grado <span className="text-red-500">*</span></label>
                                         <input
                                             value={currentEdu.degree}
                                             onChange={(e) => setCurrentEdu({ ...currentEdu, degree: e.target.value })}
                                             className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentEdu.degree && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
-                                            placeholder="Ej: Ingeniería de Inteligencia Artificial"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Periodo</label>
-                                            <input
-                                                value={currentEdu.period}
-                                                onChange={(e) => setCurrentEdu({ ...currentEdu, period: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
-                                                placeholder="Ej: 2024 - Actualidad"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Estado</label>
-                                            <select
-                                                value={currentEdu.status}
-                                                onChange={(e) => setCurrentEdu({ ...currentEdu, status: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white bg-slate-950"
-                                            >
-                                                <option value="Completed">Completado</option>
-                                                <option value="In Progress">En Curso</option>
-                                                <option value="Truncated">Técnico/Otros</option>
-                                            </select>
-                                        </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">PerÃ­odo (Ej: 2010-2014) <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={currentEdu.period}
+                                            onChange={(e) => setCurrentEdu({ ...currentEdu, period: e.target.value })}
+                                            className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentEdu.period && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
+                                        />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Estado</label>
+                                        <select
+                                            value={currentEdu.status}
+                                            onChange={(e) => setCurrentEdu({ ...currentEdu, status: e.target.value })}
+                                            className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white focus:border-cyan-500 transition-all"
+                                        >
+                                            <option value="Completed">Completado</option>
+                                            <option value="In Progress">En Curso</option>
+                                            <option value="Dropped Out">Abandonado</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddEducation}
+                                        className="w-full py-3 px-4 bg-cyan-600 text-white rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-700 transition-all font-medium"
+                                    >
+                                        <Plus size={16} />
+                                        <span>Agregar EducaciÃ³n</span>
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleAddEducation}
-                                    disabled={!currentEdu.institution || !currentEdu.degree}
-                                    className={`w-full py-3 font-bold rounded-xl transition-all text-sm border ${(!currentEdu.institution || !currentEdu.degree) ? 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20'}`}
-                                >
-                                    + Agregar a la lista
-                                </button>
                             </div>
                         </div>
 
+                        {/* STEP 6: CERTIFICATIONS */}
                         <div className={step === 6 ? 'block space-y-6' : 'hidden'}>
                             {certifications.length > 0 ? (
                                 <div className="space-y-3 mb-6">
@@ -604,90 +667,93 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                         className="flex items-center justify-between cursor-pointer group"
                                         onClick={() => setShowCertList(!showCertList)}
                                     >
-                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Added Knowledge ({certifications.length})</h4>
+                                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Added Records ({certifications.length})</h4>
                                         {showCertList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
                                     </div>
 
-                                    {showCertList && certifications.map((cert, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{cert.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono">{cert.provider} • {cert.date}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                    <Pencil size={16} />
-                                                </button>
-                                                <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    {showCertList && (
+                                        <Reorder.Group axis="y" values={certifications} onReorder={setCertifications} className="space-y-3">
+                                            {certifications.map((cert, idx) => (
+                                                <Reorder.Item key={cert._id} value={cert} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                    <div className="flex items-center gap-3">
+                                                        <GripVertical size={16} className="text-slate-600" />
+                                                        <div>
+                                                            <div className="font-bold text-white text-sm">{cert.title}</div>
+                                                            <div className="text-xs text-slate-500 font-mono">{cert.provider} â€¢ {cert.date}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                        <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </Reorder.Item>
+                                            ))}
+                                        </Reorder.Group>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-10 bg-slate-950/20 rounded-2xl border border-dashed border-white/10 mb-6">
-                                    <p className="text-slate-500 text-xs font-mono uppercase tracking-widest">No certifications detected in database.</p>
+                                    <p className="text-slate-500 text-xs font-mono uppercase tracking-widest">No matching records found in local stack.</p>
                                 </div>
                             )}
 
-                            <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-6">
+                            <div className="bg-slate-950/40 border border-white/10 rounded-2xl p-6 space-y-4">
                                 <h3 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <Award size={18} className="text-cyan-500" />
-                                    {certifications.length > 0 ? 'Inject Another Node' : 'Initialize Certification'}
+                                    {certifications.length > 0 ? 'Agregar otra certificaciÃ³n' : 'Registrar certificaciÃ³n'}
                                 </h3>
 
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Nombre del Curso <span className="text-red-500">*</span></label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">TÃ­tulo <span className="text-red-500">*</span></label>
                                         <input
                                             value={currentCert.title}
                                             onChange={(e) => setCurrentCert({ ...currentCert, title: e.target.value })}
                                             className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentCert.title && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
-                                            placeholder="Ej: How to Build a Full Stack Application"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Proveedor <span className="text-red-500">*</span></label>
-                                            <input
-                                                value={currentCert.provider}
-                                                onChange={(e) => setCurrentCert({ ...currentCert, provider: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
-                                                placeholder="Ej: freecodecamp"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Fecha</label>
-                                            <input
-                                                value={currentCert.date}
-                                                onChange={(e) => setCurrentCert({ ...currentCert, date: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
-                                                placeholder="Ej: 09/02/2025"
-                                            />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">URL (Opcional)</label>
-                                            <input
-                                                value={currentCert.url}
-                                                onChange={(e) => setCurrentCert({ ...currentCert, url: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
-                                                placeholder="https://..."
-                                            />
-                                        </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Proveedor <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={currentCert.provider}
+                                            onChange={(e) => setCurrentCert({ ...currentCert, provider: e.target.value })}
+                                            className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentCert.provider && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
+                                        />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Fecha (Ej: Enero 2023) <span className="text-red-500">*</span></label>
+                                        <input
+                                            value={currentCert.date}
+                                            onChange={(e) => setCurrentCert({ ...currentCert, date: e.target.value })}
+                                            className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentCert.date && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">URL (Opcional)</label>
+                                        <input
+                                            value={currentCert.url}
+                                            onChange={(e) => setCurrentCert({ ...currentCert, url: e.target.value })}
+                                            className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCertification}
+                                        className="w-full py-3 px-4 bg-cyan-600 text-white rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-700 transition-all font-medium"
+                                    >
+                                        <Plus size={16} />
+                                        <span>Agregar CertificaciÃ³n</span>
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleAddCertification}
-                                    disabled={!currentCert.title || !currentCert.provider}
-                                    className={`w-full py-3 font-bold rounded-xl transition-all text-sm border ${(!currentCert.title || !currentCert.provider) ? 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20'}`}
-                                >
-                                    + Inject into Stack
-                                </button>
                             </div>
                         </div>
 
+                        {/* STEP 7: PROJECT LIST RENDER */}
                         <div className={step === 7 ? 'block space-y-6' : 'hidden'}>
                             {projects.length > 0 && (
                                 <div className="space-y-3 mb-6">
@@ -699,22 +765,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                         {showProjList ? <ChevronUp size={16} className="text-cyan-500" /> : <ChevronDown size={16} className="text-cyan-500" />}
                                     </div>
 
-                                    {showProjList && projects.map((p, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{p.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                    <Pencil size={16} />
-                                                </button>
-                                                <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    {showProjList && (
+                                        <Reorder.Group axis="y" values={projects} onReorder={setProjects} className="space-y-3">
+                                            {projects.map((p, idx) => (
+                                                <Reorder.Item key={p._id} value={p} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                    <div className="flex items-center gap-3">
+                                                        <GripVertical size={16} className="text-slate-600" />
+                                                        <div>
+                                                            <div className="font-bold text-white text-sm">{p.title}</div>
+                                                            <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} â€¢ {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                        <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </Reorder.Item>
+                                            ))}
+                                        </Reorder.Group>
+                                    )}
                                 </div>
                             )}
 
@@ -758,7 +831,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Engineered Solution' : 'Estrategia Legal'}</label>
-                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Core architecture details..." : "Argumentación y acciones tomadas..."} />
+                                            <textarea value={currentProject.solution} onChange={(e) => setCurrentProject({ ...currentProject, solution: e.target.value })} rows={2} className="w-full px-4 py-3 bg-slate-950/80 border border-white/10 rounded-xl outline-none resize-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all font-light" placeholder={industry === 'Tech' ? "Core architecture details..." : "ArgumentaciÃ³n y acciones tomadas..."} />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="block text-[10px] font-bold text-cyan-500/40 uppercase tracking-[0.2em] ml-1">{industry === 'Tech' ? 'Calculated Outcome' : 'Resultado / Sentencia'}</label>
@@ -787,17 +860,37 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     <div className="border border-white/10 border-dashed rounded-2xl p-6 text-center cursor-pointer relative hover:bg-white/5 hover:border-cyan-500/30 transition-all group/upload">
-                                        <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onChange={(e) => { if (e.target.files?.[0]) setCurrentProject({ ...currentProject, imageFile: e.target.files[0] }) }} />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            onChange={(e) => {
+                                                if (e.target.files && e.target.files.length > 0) {
+                                                    const files = Array.from(e.target.files)
+                                                    setCurrentProject({ ...currentProject, imageFiles: files })
+                                                }
+                                            }}
+                                        />
                                         <div className="flex flex-col items-center gap-2">
                                             <div className="p-3 bg-white/5 rounded-full group-hover/upload:scale-110 transition-transform">
                                                 <ImageIcon size={24} className="text-slate-500 group-hover:text-cyan-400" />
                                             </div>
-                                            {currentProject.imageFile ? (
-                                                <span className="text-xs text-cyan-400 font-mono flex items-center gap-2"><CheckCircle2 size={14} /> {currentProject.imageFile.name}</span>
+                                            {currentProject.imageFiles && currentProject.imageFiles.length > 0 ? (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-xs text-cyan-400 font-mono flex items-center justify-center gap-2">
+                                                        <CheckCircle2 size={14} /> {currentProject.imageFiles.length} file(s) selected
+                                                    </span>
+                                                    <div className="flex gap-1 flex-wrap justify-center mt-1">
+                                                        {currentProject.imageFiles.map((f, i) => (
+                                                            <span key={i} className="text-[10px] text-slate-500 bg-black/20 px-1 rounded truncate max-w-[100px]">{f.name}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <div className="space-y-1">
                                                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Upload Visual Evidence</p>
-                                                    <p className="text-[10px] text-slate-500 font-mono">PNG, JPG up to 10MB</p>
+                                                    <p className="text-[10px] text-slate-500 font-mono">PNG, JPG up to 10MB (Multiple allowed)</p>
                                                 </div>
                                             )}
                                         </div>

@@ -5,12 +5,14 @@ import { useSession } from "next-auth/react";
 import { getClientShowcaseProfiles } from "@/lib/api";
 import { ShowcaseCard } from "@/components/ui/ShowcaseCard";
 import { Upload } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 import { CreateProfileModal } from "@/components/CreateProfileModal";
 import { saveSearchQuery, importProfile } from "@/lib/actions";
 
 export default function ShowcasePage() {
     const { data: session } = useSession();
+    const { showToast } = useToast();
     const [profiles, setProfiles] = useState<any[]>([]);
     const [filteredProfiles, setFilteredProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -90,13 +92,13 @@ export default function ShowcasePage() {
                 JSON.parse(content);
                 const result = await importProfile(content);
                 if (result.success) {
-                    alert("Profile imported successfully!");
+                    showToast("Profile imported successfully!", "success");
                     fetchProfiles(); // Refresh list
                 } else {
-                    alert(`Import failed: ${result.error}`);
+                    showToast(`Import failed: ${result.error}`, "error");
                 }
             } catch (err) {
-                alert("Invalid JSON file.");
+                showToast("Invalid JSON file.", "error");
             }
         };
         reader.readAsText(file);

@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { createClientProfile } from '@/lib/api'
-import { X, UserPlus, Briefcase, Scale, Server, Link2, ShieldAlert, Database, Smartphone, Users, Globe, Building, FolderGit2, Image as ImageIcon, Plus, Trash2, CheckCircle2, GraduationCap, Award, Pencil, Gavel, FileText } from 'lucide-react'
+import { X, UserPlus, Briefcase, Scale, Server, Link2, ShieldAlert, Database, Smartphone, Users, Globe, Building, FolderGit2, Image as ImageIcon, Plus, Trash2, CheckCircle2, GraduationCap, Award, Pencil, Gavel, FileText, GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { Reorder } from 'framer-motion'
 import { TECH_SPECIALTIES, LEGAL_SPECIALTIES, TECH_STACK_CATEGORIES, LEGAL_STACK_CATEGORIES, TECH_OPTIONS, LEGAL_OPTIONS, STATS_CONFIG } from '@/data/profile-constants'
-
 
 
 export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => void, trigger?: React.ReactNode }) {
@@ -20,7 +20,6 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
         "Backend & Arquitectura": [],
         "Bases de Datos": [],
         "DevOps & Infra": [],
-
         "Frontend & Diseño": [],
         "Áreas de Práctica": [],
         "Herramientas LegalTech": [],
@@ -62,7 +61,7 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
 
     const handleAddProject = () => {
         if (!currentProject.title || !currentProject.desc) return; // Basic validation
-        setProjects([...projects, { ...currentProject }])
+        setProjects([...projects, { ...currentProject, _id: Math.random().toString(36).substr(2, 9) }])
         setCurrentProject({
             title: '', client: '', type: 'Laboral', desc: '', solution: '', outcome: '', tags: [], imageFile: null
         })
@@ -89,7 +88,7 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
 
     const handleAddEducation = () => {
         if (!currentEdu.institution || !currentEdu.degree) return;
-        setEducation([...education, { ...currentEdu }])
+        setEducation([...education, { ...currentEdu, _id: Math.random().toString(36).substr(2, 9) }])
         setCurrentEdu({ institution: '', degree: '', period: '', status: 'Completed' })
     }
 
@@ -105,7 +104,7 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
 
     const handleAddCertification = () => {
         if (!currentCert.title || !currentCert.provider) return;
-        setCertifications([...certifications, { ...currentCert }])
+        setCertifications([...certifications, { ...currentCert, _id: Math.random().toString(36).substr(2, 9) }])
         setCurrentCert({ title: '', provider: '', date: '' })
     }
 
@@ -140,32 +139,33 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
         // Append Education
         let finalEducation = [...education]
         if (currentEdu.institution) {
-            finalEducation.push(currentEdu)
+            finalEducation.push({ ...currentEdu, _id: 'temp_new' })
         }
-        formData.append('education_data', JSON.stringify(finalEducation))
+        formData.append('education_data', JSON.stringify(finalEducation.map((item, idx) => ({ ...item, order: idx }))))
 
         // Append Certifications
         let finalCertifications = [...certifications]
         if (currentCert.title) {
-            finalCertifications.push(currentCert)
+            finalCertifications.push({ ...currentCert, _id: 'temp_new' })
         }
-        formData.append('certifications_data', JSON.stringify(finalCertifications))
+        formData.append('certifications_data', JSON.stringify(finalCertifications.map((item, idx) => ({ ...item, order: idx }))))
 
 
         // Append Projects
         let finalProjects = [...projects]
         if (currentProject.title) {
-            finalProjects.push(currentProject)
+            finalProjects.push({ ...currentProject, _id: 'temp_new' })
         }
 
-        formData.append('projects_data', JSON.stringify(finalProjects.map(p => ({
+        formData.append('projects_data', JSON.stringify(finalProjects.map((p, index) => ({
             title: p.title,
             client: p.client,
             type: p.type,
             desc: p.desc,
             solution: p.solution,
             outcome: p.outcome,
-            tags: p.tags
+            tags: p.tags,
+            order: index
         }))))
 
         finalProjects.forEach((p, index) => {
@@ -187,7 +187,11 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
                 "Backend & Arquitectura": [],
                 "Bases de Datos": [],
                 "DevOps & Infra": [],
-                "Frontend & Diseño": []
+                "Frontend & Diseño": [],
+                "Áreas de Práctica": [],
+                "Herramientas LegalTech": [],
+                "Habilidades Profesionales": [],
+                "Idiomas & Jurisdicción": []
             })
             setCurrentProject({
                 title: '', client: '', type: 'Laboral', desc: '', solution: '', outcome: '', tags: [], imageFile: null
@@ -403,18 +407,23 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
                             {education.length > 0 && (
                                 <div className="space-y-3 mb-6">
                                     <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Added Records ({education.length})</h4>
-                                    {education.map((edu, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{edu.institution}</div>
-                                                <div className="text-xs text-slate-500 font-mono">{edu.degree} • {edu.period}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
-                                                <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Trash2 size={16} /></button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <Reorder.Group axis="y" values={education} onReorder={setEducation} className="space-y-3">
+                                        {education.map((edu, idx) => (
+                                            <Reorder.Item key={edu._id} value={edu} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                <div className="flex items-center gap-3">
+                                                    <GripVertical size={16} className="text-slate-600" />
+                                                    <div>
+                                                        <div className="font-bold text-white text-sm">{edu.institution}</div>
+                                                        <div className="text-xs text-slate-500 font-mono">{edu.degree} • {edu.period}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
+                                                    <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                </div>
+                                            </Reorder.Item>
+                                        ))}
+                                    </Reorder.Group>
                                 </div>
                             )}
 
@@ -464,18 +473,23 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
                             {certifications.length > 0 && (
                                 <div className="space-y-3 mb-6">
                                     <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Added Knowledge ({certifications.length})</h4>
-                                    {certifications.map((cert, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{cert.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono">{cert.provider} • {cert.date}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
-                                                <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Trash2 size={16} /></button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <Reorder.Group axis="y" values={certifications} onReorder={setCertifications} className="space-y-3">
+                                        {certifications.map((cert, idx) => (
+                                            <Reorder.Item key={cert._id} value={cert} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                <div className="flex items-center gap-3">
+                                                    <GripVertical size={16} className="text-slate-600" />
+                                                    <div>
+                                                        <div className="font-bold text-white text-sm">{cert.title}</div>
+                                                        <div className="text-xs text-slate-500 font-mono">{cert.provider} • {cert.date}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
+                                                    <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                </div>
+                                            </Reorder.Item>
+                                        ))}
+                                    </Reorder.Group>
                                 </div>
                             )}
 
@@ -531,18 +545,23 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
                             {projects.length > 0 && (
                                 <div className="space-y-3 mb-6">
                                     <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{industry === 'Tech' ? 'Active Operations' : 'Casos & Experiencia'} ({projects.length})</h4>
-                                    {projects.map((p, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{p.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
-                                                <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Trash2 size={16} /></button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <Reorder.Group axis="y" values={projects} onReorder={setProjects} className="space-y-3">
+                                        {projects.map((p, idx) => (
+                                            <Reorder.Item key={p._id} value={p} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                <div className="flex items-center gap-3">
+                                                    <GripVertical size={16} className="text-slate-600" />
+                                                    <div>
+                                                        <div className="font-bold text-white text-sm">{p.title}</div>
+                                                        <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Pencil size={16} /></button>
+                                                    <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                </div>
+                                            </Reorder.Item>
+                                        ))}
+                                    </Reorder.Group>
                                 </div>
                             )}
 

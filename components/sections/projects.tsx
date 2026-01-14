@@ -1,8 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Badge } from "lucide-react"; // Wait, Badge is usually a component, let's make a simple one inline or use standard div
+import { motion, AnimatePresence } from "framer-motion";
+import { Badge, GraduationCap, Calendar, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { PROFILE } from "@/data/profile";
+
 export function Projects({ projects, yearsOfExperience, education, certifications }: { projects?: any[], yearsOfExperience?: string | null, education?: any[], certifications?: any[] }) {
     const defaultEducation = PROFILE.education || [];
     const displayEducation = education || defaultEducation;
@@ -132,9 +135,11 @@ export function Projects({ projects, yearsOfExperience, education, certification
                                         </div>
                                     </div>
 
-                                    {/* Visual Side */}
-                                    <div className="md:col-span-4 rounded-xl bg-accent/30 border border-border flex items-center justify-center min-h-[200px] group-hover:border-primary/30 transition-colors relative overflow-hidden">
-                                        {project.imageUrl ? (
+                                    {/* Visual Side with Rotating Gallery */}
+                                    <div className="md:col-span-4 rounded-xl bg-accent/30 border border-border flex items-center justify-center min-h-[200px] group-hover:border-primary/30 transition-colors relative overflow-hidden h-64 md:h-auto">
+                                        {project.images && project.images.length > 0 ? (
+                                            <ProjectGallery images={project.images.map((img: any) => img.url)} title={project.title} />
+                                        ) : project.imageUrl ? (
                                             <img src={project.imageUrl} alt={project.title} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity" />
                                         ) : (
                                             <div className="text-center p-4 relative z-10">
@@ -232,7 +237,41 @@ export function Projects({ projects, yearsOfExperience, education, certification
     );
 }
 
-// Helper icons
-import { GraduationCap, Calendar, BookOpen } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+
+
+function ProjectGallery({ images, title }: { images: string[], title: string }) {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % images.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, [images.length]);
+
+    return (
+        <div className="absolute inset-0 w-full h-full bg-slate-900">
+            <AnimatePresence mode='wait'>
+                <motion.img
+                    key={images[index]}
+                    src={images[index]}
+                    alt={`${title} view ${index + 1}`}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 0.6, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1 }}
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            </AnimatePresence>
+            <div className="absolute bottom-2 right-2 flex gap-1 z-10">
+                {images.map((_, i) => (
+                    <div
+                        key={i}
+                        className={cn("w-1.5 h-1.5 rounded-full transition-all", i === index ? "bg-cyan-400 w-3" : "bg-white/30")}
+                    />
+                ))}
+            </div>
+        </div>
+    )
+}
