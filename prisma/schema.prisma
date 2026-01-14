@@ -130,6 +130,7 @@ model Education {
   degree      String
   period      String
   status      String?
+  logoUrl     String? // Add this line
   order       Int     @default(0)
   profileId   String
   profile     Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)

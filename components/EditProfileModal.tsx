@@ -66,7 +66,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         institution: '',
         degree: '',
         period: '',
-        status: 'Completed'
+        status: 'Completed',
+        logoUrl: '',
+        existingLogoUrl: null as string | null,
+        imageFile: null as File | null
     })
 
     // Certifications State
@@ -152,7 +155,8 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                         institution: edu.institution,
                         degree: edu.degree,
                         period: edu.period,
-                        status: edu.status
+                        status: edu.status,
+                        existingLogoUrl: edu.logoUrl
                     }))
                 setEducation(loadedEducation)
             }
@@ -250,7 +254,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
     const handleAddEducation = () => {
         if (!currentEdu.institution || !currentEdu.degree || !currentEdu.period) return;
         setEducation([...education, { ...currentEdu, _id: Math.random().toString(36).substr(2, 9) }])
-        setCurrentEdu({ institution: '', degree: '', period: '', status: 'Completed' })
+        setCurrentEdu({ institution: '', degree: '', period: '', status: 'Completed', logoUrl: '', existingLogoUrl: null, imageFile: null })
         setShowEduList(true)
     }
 
@@ -260,7 +264,12 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
     const editEducation = (index: number) => {
         const eduToEdit = education[index]
-        setCurrentEdu(eduToEdit)
+        setCurrentEdu({
+            ...eduToEdit,
+            logoUrl: eduToEdit.logoUrl || '',
+            existingLogoUrl: eduToEdit.existingLogoUrl || eduToEdit.logoUrl || null,
+            imageFile: null
+        })
         removeEducation(index)
     }
 
@@ -314,7 +323,6 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         }
         formData.append('certifications_data', JSON.stringify(finalCertifications.map((item, idx) => ({ ...item, order: idx }))))
 
-        // Inject Projects
         const finalProjects = [...projects]
         if (currentProject.title) {
             finalProjects.push({ ...currentProject, _id: 'temp_new' })
@@ -343,6 +351,13 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             } else if (p.imageFile) {
                 // Fallback for singular legacy state
                 formData.append(`project_image_${index}`, p.imageFile)
+            }
+        })
+
+        // Process Education Images
+        finalEducation.forEach((edu, index) => {
+            if (edu.imageFile) {
+                formData.append(`education_image_${index}`, edu.imageFile)
             }
         })
 
@@ -634,6 +649,32 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                             onChange={(e) => setCurrentEdu({ ...currentEdu, period: e.target.value })}
                                             className={`w-full px-4 py-3 bg-slate-950/50 border rounded-xl outline-none text-sm text-white placeholder:text-slate-700 focus:border-cyan-500 transition-all ${!currentEdu.period && isPending ? 'border-red-500/50 bg-red-500/5' : 'border-white/10'}`}
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Logotipo (Opcional)</label>
+                                        <div className="flex items-center gap-4">
+                                            {currentEdu.existingLogoUrl && !currentEdu.imageFile && (
+                                                <div className="w-12 h-12 relative rounded-lg overflow-hidden border border-white/10">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={currentEdu.existingLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    if (e.target.files?.[0]) {
+                                                        setCurrentEdu({ ...currentEdu, imageFile: e.target.files[0] })
+                                                    }
+                                                }}
+                                                className="block w-full text-xs text-slate-400
+                                                    file:mr-4 file:py-2 file:px-4
+                                                    file:rounded-full file:border-0
+                                                    file:text-xs file:font-semibold
+                                                    file:bg-cyan-500/10 file:text-cyan-500
+                                                    hover:file:bg-cyan-500/20"
+                                            />
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-1">Estado</label>

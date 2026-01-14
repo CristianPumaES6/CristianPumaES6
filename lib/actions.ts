@@ -138,7 +138,10 @@ export async function getProfileById(identifier: string) {
                     include: { highlights: true }
                 },
                 projects: {
-                    include: { tags: true },
+                    include: {
+                        tags: true,
+                        images: true
+                    },
                     orderBy: { order: 'asc' }
                 },
                 skillCategories: {
@@ -523,17 +526,40 @@ export async function updateProfile(id: string, formData: FormData) {
         }
 
         // 6. Update Education (New)
+        // 6. Update Education (New)
         await db.education.deleteMany({ where: { profileId: id } })
         const educationJson = formData.get('education_data') as string
         const educationData = educationJson ? JSON.parse(educationJson) : []
-        const educationCreate = educationData.map((edu: any) => ({
-            profileId: id,
-            institution: edu.institution,
-            degree: edu.degree,
-            period: edu.period,
-            status: edu.status || 'Completed',
-            order: edu.order || 0 // Save order
-        }))
+
+        const educationCreate = []
+        for (let i = 0; i < educationData.length; i++) {
+            const edu = educationData[i]
+            let logoUrl = edu.existingLogoUrl // Start with existing
+
+            // Check for NEW uploaded file
+            const eduImage = formData.get(`education_image_${i}`) as File | null
+
+            if (eduImage && eduImage.size > 0 && eduImage.name !== 'undefined') {
+                const bytes = await eduImage.arrayBuffer()
+                const buffer = Buffer.from(bytes)
+                const uploadDir = join(process.cwd(), 'public', 'uploads')
+                await mkdir(uploadDir, { recursive: true })
+                const filename = `${Date.now()}-edu-${i}-${eduImage.name.replace(/\s/g, '_')}`
+                const filepath = join(uploadDir, filename)
+                await writeFile(filepath, buffer)
+                logoUrl = `/uploads/${filename}`
+            }
+
+            educationCreate.push({
+                profileId: id,
+                institution: edu.institution,
+                degree: edu.degree,
+                period: edu.period,
+                status: edu.status || 'Completed',
+                logoUrl: logoUrl,
+                order: edu.order || 0 // Save order
+            })
+        }
 
         if (educationCreate.length > 0) {
             await db.education.createMany({ data: educationCreate })

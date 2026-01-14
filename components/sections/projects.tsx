@@ -239,39 +239,156 @@ export function Projects({ projects, yearsOfExperience, education, certification
 
 
 
+// --- POPUP / LIGHTBOX COMPONENT ---
 function ProjectGallery({ images, title }: { images: string[], title: string }) {
     const [index, setIndex] = useState(0);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
 
+    // Auto-rotate for the preview card
     useEffect(() => {
-        if (images.length <= 1) return;
+        if (images.length <= 1 || lightboxOpen) return;
         const interval = setInterval(() => {
             setIndex((prev) => (prev + 1) % images.length);
         }, 4000);
         return () => clearInterval(interval);
-    }, [images.length]);
+    }, [images.length, lightboxOpen]);
+
+    const openLightbox = () => {
+        setLightboxIndex(index);
+        setLightboxOpen(true);
+    };
+
+    const nextImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setLightboxIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const prevImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setLightboxIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (!lightboxOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setLightboxOpen(false);
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [lightboxOpen]);
 
     return (
-        <div className="absolute inset-0 w-full h-full bg-slate-900">
-            <AnimatePresence mode='wait'>
-                <motion.img
-                    key={images[index]}
-                    src={images[index]}
-                    alt={`${title} view ${index + 1}`}
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 0.6, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1 }}
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
-            </AnimatePresence>
-            <div className="absolute bottom-2 right-2 flex gap-1 z-10">
-                {images.map((_, i) => (
-                    <div
-                        key={i}
-                        className={cn("w-1.5 h-1.5 rounded-full transition-all", i === index ? "bg-cyan-400 w-3" : "bg-white/30")}
+        <>
+            {/* CARD PREVIEW */}
+            <div
+                className="absolute inset-0 w-full h-full bg-slate-900 cursor-pointer group/gallery"
+                onClick={openLightbox}
+            >
+                <AnimatePresence mode='wait'>
+                    <motion.img
+                        key={`preview-${images[index]}`}
+                        src={images[index]}
+                        alt={`${title} preview`}
+                        initial={{ opacity: 0, scale: 1.1 }}
+                        animate={{ opacity: 0.6, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1 }}
+                        className="absolute inset-0 w-full h-full object-cover"
                     />
-                ))}
+                </AnimatePresence>
+
+                {/* Overlay indicating clickability */}
+                <div className="absolute inset-0 bg-black/0 group-hover/gallery:bg-black/20 transition-colors flex items-center justify-center">
+                    <div className="opacity-0 group-hover/gallery:opacity-100 transition-opacity transform scale-90 group-hover/gallery:scale-100 bg-black/50 backdrop-blur-md text-white p-3 rounded-full border border-white/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-3 right-3 flex gap-1.5 z-10 pointer-events-none">
+                    {images.map((_, i) => (
+                        <div
+                            key={i}
+                            className={cn(
+                                "h-1 rounded-full transition-all duration-300 shadow-sm",
+                                i === index ? "bg-cyan-400 w-6" : "bg-white/30 w-1.5"
+                            )}
+                        />
+                    ))}
+                </div>
             </div>
-        </div>
+
+            {/* LIGHTBOX PORTAL */}
+            <AnimatePresence>
+                {lightboxOpen && (
+                    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 md:p-10">
+
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl"
+                            onClick={() => setLightboxOpen(false)}
+                        />
+
+                        {/* Content */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative w-full h-full max-w-7xl max-h-[90vh] flex flex-col items-center justify-center"
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setLightboxOpen(false)}
+                                className="absolute -top-12 right-0 md:top-0 md:-right-12 z-50 p-2 text-slate-400 hover:text-white transition-colors hover:bg-white/10 rounded-full"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+
+                            {/* Main Image */}
+                            <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+                                <motion.img
+                                    key={`lightbox-${images[lightboxIndex]}`}
+                                    src={images[lightboxIndex]}
+                                    alt="Full screen view"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="max-w-full max-h-full object-contain"
+                                />
+
+                                {/* Info Caption */}
+                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 pt-20 text-center">
+                                    <h4 className="text-white font-bold text-lg mb-1">{title}</h4>
+                                    <p className="text-slate-400 text-xs uppercase tracking-widest">{lightboxIndex + 1} / {images.length}</p>
+                                </div>
+                            </div>
+
+                            {/* Navigation Buttons */}
+                            {images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={prevImage}
+                                        className="absolute left-0 md:-left-16 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                    </button>
+                                    <button
+                                        onClick={nextImage}
+                                        className="absolute right-0 md:-right-16 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                    </button>
+                                </>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </>
     )
 }
