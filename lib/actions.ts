@@ -490,19 +490,40 @@ export async function updateProfile(id: string, formData: FormData) {
         for (let i = 0; i < projectsData.length; i++) {
             const p = projectsData[i]
             let imageUrl = p.existingImageUrl // Start with existing
+            // Collect all images (Existing + New)
+            const allImagesToCreate = []
 
-            // Check for NEW uploaded file
-            const projectImage = formData.get(`project_image_${i}`) as File | null
+            // A. Keep existing images (passed back from frontend)
+            if (p.images && Array.isArray(p.images)) {
+                p.images.forEach((img: any) => {
+                    allImagesToCreate.push({ url: img.url })
+                })
+            }
 
-            if (projectImage && projectImage.size > 0 && projectImage.name !== 'undefined') {
-                const bytes = await projectImage.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const uploadDir = join(process.cwd(), 'public', 'uploads')
-                await mkdir(uploadDir, { recursive: true })
-                const filename = `${Date.now()}-${i}-${projectImage.name.replace(/\s/g, '_')}`
-                const filepath = join(uploadDir, filename)
-                await writeFile(filepath, buffer)
-                imageUrl = `/uploads/${filename}`
+            // B. Process NEW uploaded files (Multiple)
+            const newFiles = formData.getAll(`project_image_${i}`) as File[]
+            let newCoverUrl: string | null = null
+
+            for (const file of newFiles) {
+                if (file && file.size > 0 && file.name !== 'undefined') {
+                    const bytes = await file.arrayBuffer()
+                    const buffer = Buffer.from(bytes)
+                    const uploadDir = join(process.cwd(), 'public', 'uploads')
+                    await mkdir(uploadDir, { recursive: true })
+                    const filename = `${Date.now()}-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s/g, '_')}`
+                    const filepath = join(uploadDir, filename)
+                    await writeFile(filepath, buffer)
+                    const url = `/uploads/${filename}`
+
+                    allImagesToCreate.push({ url })
+                    if (!newCoverUrl) newCoverUrl = url // Pick first new one as potential cover
+                }
+            }
+
+            // Determine final cover image (New > Existing > Fallback)
+            // If we have a new cover, use it. Otherwise keep existing.
+            if (newCoverUrl) {
+                imageUrl = newCoverUrl
             }
 
             await db.project.create({
@@ -520,6 +541,9 @@ export async function updateProfile(id: string, formData: FormData) {
                     order: p.order || 0, // Save order
                     tags: {
                         create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
+                    },
+                    images: {
+                        create: allImagesToCreate
                     }
                 }
             })

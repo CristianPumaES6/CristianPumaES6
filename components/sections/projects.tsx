@@ -324,64 +324,67 @@ function ProjectGallery({ images, title }: { images: string[], title: string }) 
             {/* LIGHTBOX PORTAL */}
             <AnimatePresence>
                 {lightboxOpen && (
-                    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 md:p-10">
+                    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-2 md:p-4">
 
                         {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl"
+                            className="absolute inset-0 bg-black/98 backdrop-blur-xl"
                             onClick={() => setLightboxOpen(false)}
                         />
 
                         {/* Content */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
+                            initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative w-full h-full max-w-7xl max-h-[90vh] flex flex-col items-center justify-center"
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className="relative w-full h-full max-w-[98vw] max-h-[95vh] flex flex-col items-center justify-center"
                         >
                             {/* Close Button */}
                             <button
                                 onClick={() => setLightboxOpen(false)}
-                                className="absolute -top-12 right-0 md:top-0 md:-right-12 z-50 p-2 text-slate-400 hover:text-white transition-colors hover:bg-white/10 rounded-full"
+                                className="absolute top-4 right-4 z-50 p-3 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full backdrop-blur-md transition-all border border-white/10"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                             </button>
 
                             {/* Main Image */}
-                            <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+                            <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-lg bg-transparent shadow-2xl">
                                 <motion.img
                                     key={`lightbox-${images[lightboxIndex]}`}
                                     src={images[lightboxIndex]}
                                     alt="Full screen view"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="max-w-full max-h-full object-contain"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className="max-w-full max-h-full object-contain drop-shadow-2xl"
                                 />
 
-                                {/* Info Caption */}
-                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 pt-20 text-center">
-                                    <h4 className="text-white font-bold text-lg mb-1">{title}</h4>
-                                    <p className="text-slate-400 text-xs uppercase tracking-widest">{lightboxIndex + 1} / {images.length}</p>
+                                {/* Info Caption - Overlay at bottom */}
+                                <div className="absolute bottom-6 inset-x-0 text-center pointer-events-none">
+                                    <div className="inline-block bg-black/60 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full">
+                                        <h4 className="text-white font-bold text-lg inline mr-3">{title}</h4>
+                                        <span className="text-cyan-400 text-sm font-mono tracking-widest border-l border-white/20 pl-3">{lightboxIndex + 1} / {images.length}</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Navigation Buttons */}
+                            {/* Navigation Buttons - Fixed to screen sides */}
                             {images.length > 1 && (
                                 <>
                                     <button
                                         onClick={prevImage}
-                                        className="absolute left-0 md:-left-16 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                                        className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white hover:bg-black/50 rounded-full transition-all backdrop-blur-sm border border-transparent hover:border-white/10"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                     </button>
                                     <button
                                         onClick={nextImage}
-                                        className="absolute right-0 md:-right-16 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                                        className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white hover:bg-black/50 rounded-full transition-all backdrop-blur-sm border border-transparent hover:border-white/10"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                     </button>
                                 </>
                             )}
