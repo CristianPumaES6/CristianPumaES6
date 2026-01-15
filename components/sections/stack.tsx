@@ -2,6 +2,7 @@
 
 import { PROFILE } from "@/data/profile";
 import { motion } from "framer-motion";
+import { TechIcon } from "@/components/ui/TechIcon";
 
 export function Stack({ stack }: { stack?: any[] }) {
     const displayStack = stack || PROFILE.stack;
@@ -29,7 +30,7 @@ export function Stack({ stack }: { stack?: any[] }) {
                                             viewport={{ once: true }}
                                             className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 font-mono"
                                         >
-                                            <span className="w-1.5 h-1.5 rounded-sm bg-primary shadow-[0_0_5px_var(--color-primary)]" />
+                                            <TechIcon name={itemName} className="w-4 h-4 text-primary" />
                                             {itemName}
                                         </motion.li>
                                     );

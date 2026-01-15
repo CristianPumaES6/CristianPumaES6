@@ -5,6 +5,7 @@ import { Badge, GraduationCap, Calendar, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { PROFILE } from "@/data/profile";
+import { TechIcon } from "@/components/ui/TechIcon";
 
 export function Projects({ projects, yearsOfExperience, education, certifications }: { projects?: any[], yearsOfExperience?: string | null, education?: any[], certifications?: any[] }) {
     const defaultEducation = PROFILE.education || [];
@@ -127,8 +128,9 @@ export function Projects({ projects, yearsOfExperience, education, certification
                                             {(project.tech || project.tags?.map((t: any) => t.name) || []).map((t: string) => (
                                                 <span
                                                     key={t}
-                                                    className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                                                    className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5"
                                                 >
+                                                    <TechIcon name={t} className="w-3 h-3" />
                                                     {t}
                                                 </span>
                                             ))}

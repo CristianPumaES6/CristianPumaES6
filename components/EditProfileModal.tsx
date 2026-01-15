@@ -9,6 +9,7 @@ import { Reorder } from 'framer-motion'
 import { TECH_SPECIALTIES, LEGAL_SPECIALTIES, TECH_STACK_CATEGORIES, LEGAL_STACK_CATEGORIES, TECH_OPTIONS, LEGAL_OPTIONS, STATS_CONFIG } from '@/data/profile-constants'
 
 import { useToast } from '@/components/ui/toast'
+import { TechIcon } from '@/components/ui/TechIcon'
 
 export function EditProfileModal({ profile, onSuccess }: { profile: any, onSuccess?: () => void }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -692,9 +693,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                                     <input
                                                         type="checkbox"
                                                         className="sr-only"
-                                                        checked={selectedStack[catName]?.includes(item)}
+                                                        checked={selectedStack[catName]?.includes(item) || false}
                                                         onChange={() => toggleStackItem(catName, item)}
                                                     />
+                                                    {industry === 'Tech' && <TechIcon name={item} className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors" />}
                                                     <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-200 font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>{item}</span>
                                                 </label>
                                             ))}
@@ -1021,6 +1023,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                                         {currentProject.tags.includes(tech) && <CheckCircle2 size={10} className="text-black" />}
                                                     </div>
                                                     <input type="checkbox" checked={currentProject.tags.includes(tech)} onChange={() => toggleTech(tech)} className="sr-only" />
+                                                    {industry === 'Tech' && <TechIcon name={tech} className="w-3 h-3 text-slate-500 group-hover/item:text-cyan-400" />}
                                                     <span className={`text-[11px] uppercase tracking-tighter ${currentProject.tags.includes(tech) ? 'text-white font-bold' : 'text-slate-500 group-hover/item:text-slate-300'}`}>{tech}</span>
                                                 </label>
                                             ))}
