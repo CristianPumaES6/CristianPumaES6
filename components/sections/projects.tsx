@@ -30,6 +30,10 @@ export function Projects({ projects, yearsOfExperience, education, certification
     });
 
     const sortedCertifications = certifications ? [...certifications].sort((a, b) => {
+        // Sort by order descending if defined
+        if (a.order !== undefined && b.order !== undefined) {
+            return (b.order || 0) - (a.order || 0);
+        }
         return parseDate(b.date) - parseDate(a.date);
     }) : [];
 
