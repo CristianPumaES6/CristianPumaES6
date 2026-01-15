@@ -101,7 +101,10 @@ export async function getShowcaseProfiles() {
                 socials: true,
                 experiences: true,
                 projects: {
-                    include: { tags: true },
+                    include: {
+                        tags: true,
+                        images: true
+                    },
                     orderBy: { order: 'asc' }
                 },
                 skillCategories: {
@@ -381,230 +384,231 @@ export async function updateProfile(id: string, formData: FormData) {
     }
 
     try {
-        // 1. Update Basic Info
-        await db.profile.update({
-            where: { id },
-            data: {
-                ...rawData,
-                slug: slugify(rawData.name)
-            }
-        })
-
-        // 2. Update Attributes (Stats)
-        await db.attribute.deleteMany({ where: { profileId: id } })
-
-        const stats: any[] = []
-        const pushStat = (key: string, label: string) => {
-            const value = formData.get(key) as string
-            if (value) stats.push({ label, value, profileId: id })
-        }
-
-        // Update Socials
-        await db.social.deleteMany({ where: { profileId: id } })
-        const socialLinks: any[] = []
-        const extractSocial = (platform: string, iconName: string) => {
-            const url = formData.get(`social_${platform.toLowerCase()}`) as string
-            if (url) {
-                socialLinks.push({ platform, url, iconName, profileId: id })
-            }
-        }
-        extractSocial('LinkedIn', 'Linkedin')
-        extractSocial('GitHub', 'Github')
-        extractSocial('YouTube', 'Youtube')
-        extractSocial('Email', 'Mail')
-        extractSocial('TikTok', 'Tiktok')
-
-        if (socialLinks.length > 0) {
-            await db.social.createMany({ data: socialLinks })
-        }
-
-        if (rawData.industry === 'Tech') {
-            pushStat('stat_ranking', 'RANKING')
-            pushStat('stat_experience', 'EXPERIENCIA')
-            pushStat('stat_level', 'LEVEL')
-            pushStat('stat_stack', 'STACK')
-        } else {
-            pushStat('stat_ciclo', 'CICLO')
-            pushStat('stat_merito', 'MÉRITO')
-            pushStat('stat_disponibilidad', 'DISPONIBILIDAD')
-        }
-
-        if (stats.length > 0) {
-            await db.attribute.createMany({ data: stats })
-        }
-
-        // 3. Update Specialties
-        await db.experience.deleteMany({
-            where: {
-                profileId: id,
-                type: 'Specialization'
-            }
-        })
-
-        const specialties = formData.getAll('specialties') as string[]
-        for (const spec of specialties) {
-            const [title, desc] = spec.split('|')
-            await db.experience.create({
+        await db.$transaction(async (tx) => {
+            // 1. Update Basic Info
+            await tx.profile.update({
+                where: { id },
                 data: {
-                    profileId: id,
-                    title,
-                    organization: 'Core Competency',
-                    period: 'Continuous',
-                    type: 'Specialization',
-                    highlights: {
-                        create: [{ text: desc }]
-                    }
+                    ...rawData,
+                    slug: slugify(rawData.name)
                 }
             })
-        }
 
-        // 4. Update Tech Stack
-        await db.skillCategory.deleteMany({ where: { profileId: id } }) // Cascade deletes items
+            // 2. Update Attributes (Stats)
+            await tx.attribute.deleteMany({ where: { profileId: id } })
 
-        const techStackJson = formData.get('tech_stack_data') as string
-        const techStackData = techStackJson ? JSON.parse(techStackJson) : {}
+            const stats: any[] = []
+            const pushStat = (key: string, label: string) => {
+                const value = formData.get(key) as string
+                if (value) stats.push({ label, value, profileId: id })
+            }
 
-        const skillCategoriesCreate = Object.entries(techStackData).map(([category, items]: [string, any]) => {
-            if (!items || items.length === 0) return null
-            return {
-                profileId: id,
-                name: category,
-                items: {
-                    create: items.map((itemName: string) => ({ name: itemName }))
+            // Update Socials
+            await tx.social.deleteMany({ where: { profileId: id } })
+            const socialLinks: any[] = []
+            const extractSocial = (platform: string, iconName: string) => {
+                const url = formData.get(`social_${platform.toLowerCase()}`) as string
+                if (url) {
+                    socialLinks.push({ platform, url, iconName, profileId: id })
                 }
             }
-        }).filter(Boolean) as any[]
+            extractSocial('LinkedIn', 'Linkedin')
+            extractSocial('GitHub', 'Github')
+            extractSocial('YouTube', 'Youtube')
+            extractSocial('Email', 'Mail')
+            extractSocial('TikTok', 'Tiktok')
 
-        for (const cat of skillCategoriesCreate) {
-            await db.skillCategory.create({
-                data: cat
+            if (socialLinks.length > 0) {
+                await tx.social.createMany({ data: socialLinks })
+            }
+
+            if (rawData.industry === 'Tech') {
+                pushStat('stat_ranking', 'RANKING')
+                pushStat('stat_experience', 'EXPERIENCIA')
+                pushStat('stat_level', 'LEVEL')
+                pushStat('stat_stack', 'STACK')
+            } else {
+                pushStat('stat_ciclo', 'CICLO')
+                pushStat('stat_merito', 'MÉRITO')
+                pushStat('stat_disponibilidad', 'DISPONIBILIDAD')
+            }
+
+            if (stats.length > 0) {
+                await tx.attribute.createMany({ data: stats })
+            }
+
+            // 3. Update Specialties
+            await tx.experience.deleteMany({
+                where: {
+                    profileId: id,
+                    type: 'Specialization'
+                }
             })
-        }
 
-        // 5. Update Projects
-        await db.project.deleteMany({ where: { profileId: id } })
-
-        const projectsJson = formData.get('projects_data') as string
-        const projectsData = projectsJson ? JSON.parse(projectsJson) : []
-
-        for (let i = 0; i < projectsData.length; i++) {
-            const p = projectsData[i]
-            let imageUrl = p.existingImageUrl // Start with existing
-            // Collect all images (Existing + New)
-            const allImagesToCreate = []
-
-            // A. Keep existing images (passed back from frontend)
-            if (p.images && Array.isArray(p.images)) {
-                p.images.forEach((img: any) => {
-                    allImagesToCreate.push({ url: img.url })
+            const specialties = formData.getAll('specialties') as string[]
+            for (const spec of specialties) {
+                const [title, desc] = spec.split('|')
+                await tx.experience.create({
+                    data: {
+                        profileId: id,
+                        title,
+                        organization: 'Core Competency',
+                        period: 'Continuous',
+                        type: 'Specialization',
+                        highlights: {
+                            create: [{ text: desc }]
+                        }
+                    }
                 })
             }
 
-            // B. Process NEW uploaded files (Multiple)
-            const newFiles = formData.getAll(`project_image_${i}`) as File[]
-            let newCoverUrl: string | null = null
+            // 4. Update Tech Stack
+            await tx.skillCategory.deleteMany({ where: { profileId: id } }) // Cascade deletes items
 
-            for (const file of newFiles) {
-                if (file && file.size > 0 && file.name !== 'undefined') {
-                    const bytes = await file.arrayBuffer()
+            const techStackJson = formData.get('tech_stack_data') as string
+            const techStackData = techStackJson ? JSON.parse(techStackJson) : {}
+
+            const skillCategoriesCreate = Object.entries(techStackData).map(([category, items]: [string, any]) => {
+                if (!items || items.length === 0) return null
+                return {
+                    profileId: id,
+                    name: category,
+                    items: {
+                        create: items.map((itemName: string) => ({ name: itemName }))
+                    }
+                }
+            }).filter(Boolean) as any[]
+
+            for (const cat of skillCategoriesCreate) {
+                await tx.skillCategory.create({
+                    data: cat
+                })
+            }
+
+            // 5. Update Projects
+            await tx.project.deleteMany({ where: { profileId: id } })
+
+            const projectsJson = formData.get('projects_data') as string
+            const projectsData = projectsJson ? JSON.parse(projectsJson) : []
+
+            for (let i = 0; i < projectsData.length; i++) {
+                const p = projectsData[i]
+                let imageUrl = p.existingImageUrl // Start with existing
+
+                // Collect all images (Existing + New)
+                const allImagesToCreate = []
+
+                // A. Keep existing images (passed back from frontend)
+                if (p.images && Array.isArray(p.images)) {
+                    p.images.forEach((img: any) => {
+                        allImagesToCreate.push({ url: img.url })
+                    })
+                }
+
+                // B. Process NEW uploaded files (Multiple)
+                const newFiles = formData.getAll(`project_image_${i}`) as File[]
+                let newCoverUrl: string | null = null
+
+                for (const file of newFiles) {
+                    if (file && file.size > 0 && file.name !== 'undefined') {
+                        const bytes = await file.arrayBuffer()
+                        const buffer = Buffer.from(bytes)
+                        const uploadDir = join(process.cwd(), 'public', 'uploads')
+                        await mkdir(uploadDir, { recursive: true })
+                        const filename = `${Date.now()}-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s/g, '_')}`
+                        const filepath = join(uploadDir, filename)
+                        await writeFile(filepath, buffer)
+                        const url = `/uploads/${filename}`
+
+                        allImagesToCreate.push({ url })
+                        if (!newCoverUrl) newCoverUrl = url // Pick first new one as potential cover
+                    }
+                }
+
+                // Determine final cover image (New > Existing > Fallback)
+                if (newCoverUrl) {
+                    imageUrl = newCoverUrl
+                }
+
+                await tx.project.create({
+                    data: {
+                        profileId: id,
+                        title: p.title,
+                        client: p.client || (p.type === 'Personal' ? 'Personal Project' : 'Confidential'),
+                        type: p.type || 'Laboral',
+                        description: p.desc || 'No challenge provided.',
+                        solution: p.solution || 'No solution details.',
+                        outcome: p.outcome || 'Successful deployment.',
+                        imageUrl: imageUrl,
+                        url: p.url || '',
+                        highlight: true,
+                        order: p.order || 0, // Save order
+                        tags: {
+                            create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
+                        },
+                        images: {
+                            create: allImagesToCreate
+                        }
+                    }
+                })
+            }
+
+            // 6. Update Education (New)
+            await tx.education.deleteMany({ where: { profileId: id } })
+            const educationJson = formData.get('education_data') as string
+            const educationData = educationJson ? JSON.parse(educationJson) : []
+
+            const educationCreate = []
+            for (let i = 0; i < educationData.length; i++) {
+                const edu = educationData[i]
+                let logoUrl = edu.existingLogoUrl // Start with existing
+
+                // Check for NEW uploaded file
+                const eduImage = formData.get(`education_image_${i}`) as File | null
+
+                if (eduImage && eduImage.size > 0 && eduImage.name !== 'undefined') {
+                    const bytes = await eduImage.arrayBuffer()
                     const buffer = Buffer.from(bytes)
                     const uploadDir = join(process.cwd(), 'public', 'uploads')
                     await mkdir(uploadDir, { recursive: true })
-                    const filename = `${Date.now()}-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s/g, '_')}`
+                    const filename = `${Date.now()}-edu-${i}-${eduImage.name.replace(/\s/g, '_')}`
                     const filepath = join(uploadDir, filename)
                     await writeFile(filepath, buffer)
-                    const url = `/uploads/${filename}`
-
-                    allImagesToCreate.push({ url })
-                    if (!newCoverUrl) newCoverUrl = url // Pick first new one as potential cover
+                    logoUrl = `/uploads/${filename}`
                 }
-            }
 
-            // Determine final cover image (New > Existing > Fallback)
-            // If we have a new cover, use it. Otherwise keep existing.
-            if (newCoverUrl) {
-                imageUrl = newCoverUrl
-            }
-
-            await db.project.create({
-                data: {
+                educationCreate.push({
                     profileId: id,
-                    title: p.title,
-                    client: p.client || (p.type === 'Personal' ? 'Personal Project' : 'Confidential'),
-                    type: p.type || 'Laboral',
-                    description: p.desc || 'No challenge provided.',
-                    solution: p.solution || 'No solution details.',
-                    outcome: p.outcome || 'Successful deployment.',
-                    imageUrl: imageUrl,
-                    url: p.url || '',
-                    highlight: true,
-                    order: p.order || 0, // Save order
-                    tags: {
-                        create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
-                    },
-                    images: {
-                        create: allImagesToCreate
-                    }
-                }
-            })
-        }
-
-        // 6. Update Education (New)
-        // 6. Update Education (New)
-        await db.education.deleteMany({ where: { profileId: id } })
-        const educationJson = formData.get('education_data') as string
-        const educationData = educationJson ? JSON.parse(educationJson) : []
-
-        const educationCreate = []
-        for (let i = 0; i < educationData.length; i++) {
-            const edu = educationData[i]
-            let logoUrl = edu.existingLogoUrl // Start with existing
-
-            // Check for NEW uploaded file
-            const eduImage = formData.get(`education_image_${i}`) as File | null
-
-            if (eduImage && eduImage.size > 0 && eduImage.name !== 'undefined') {
-                const bytes = await eduImage.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const uploadDir = join(process.cwd(), 'public', 'uploads')
-                await mkdir(uploadDir, { recursive: true })
-                const filename = `${Date.now()}-edu-${i}-${eduImage.name.replace(/\s/g, '_')}`
-                const filepath = join(uploadDir, filename)
-                await writeFile(filepath, buffer)
-                logoUrl = `/uploads/${filename}`
+                    institution: edu.institution,
+                    degree: edu.degree,
+                    period: edu.period,
+                    status: edu.status || 'Completed',
+                    logoUrl: logoUrl,
+                    order: edu.order || 0
+                })
             }
 
-            educationCreate.push({
+            if (educationCreate.length > 0) {
+                await tx.education.createMany({ data: educationCreate })
+            }
+
+            // 7. Update Certifications (New)
+            await tx.certification.deleteMany({ where: { profileId: id } })
+            const certificationsJson = formData.get('certifications_data') as string
+            const certificationsData = certificationsJson ? JSON.parse(certificationsJson) : []
+            const certificationsCreate = certificationsData.map((cert: any) => ({
                 profileId: id,
-                institution: edu.institution,
-                degree: edu.degree,
-                period: edu.period,
-                status: edu.status || 'Completed',
-                logoUrl: logoUrl,
-                order: edu.order || 0 // Save order
-            })
-        }
+                title: cert.title,
+                provider: cert.provider,
+                date: cert.date,
+                url: cert.url || '',
+                order: cert.order || 0 // Save order
+            }))
 
-        if (educationCreate.length > 0) {
-            await db.education.createMany({ data: educationCreate })
-        }
-
-        // 7. Update Certifications (New)
-        await db.certification.deleteMany({ where: { profileId: id } })
-        const certificationsJson = formData.get('certifications_data') as string
-        const certificationsData = certificationsJson ? JSON.parse(certificationsJson) : []
-        const certificationsCreate = certificationsData.map((cert: any) => ({
-            profileId: id,
-            title: cert.title,
-            provider: cert.provider,
-            date: cert.date,
-            url: cert.url || '',
-            order: cert.order || 0 // Save order
-        }))
-
-        if (certificationsCreate.length > 0) {
-            await db.certification.createMany({ data: certificationsCreate })
-        }
+            if (certificationsCreate.length > 0) {
+                await tx.certification.createMany({ data: certificationsCreate })
+            }
+        })
 
         revalidatePath('/showcase')
         return { success: true }
@@ -694,8 +698,12 @@ export async function importProfile(jsonContent: string) {
                         imageUrl: x.imageUrl,
                         url: x.url,
                         highlight: x.highlight,
+                        order: x.order || 0,
                         tags: {
                             create: x.tags?.map((t: any) => ({ name: t.name })) || []
+                        },
+                        images: {
+                            create: x.images?.map((img: any) => ({ url: img.url })) || []
                         }
                     })) || []
                 },
@@ -712,7 +720,9 @@ export async function importProfile(jsonContent: string) {
                         institution: x.institution,
                         degree: x.degree,
                         period: x.period,
-                        status: x.status
+                        status: x.status,
+                        logoUrl: x.logoUrl,
+                        order: x.order || 0
                     })) || []
                 },
                 certifications: {
@@ -720,7 +730,8 @@ export async function importProfile(jsonContent: string) {
                         title: x.title,
                         provider: x.provider,
                         date: x.date,
-                        url: x.url
+                        url: x.url,
+                        order: x.order || 0
                     })) || []
                 }
             }
