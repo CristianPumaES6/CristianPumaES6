@@ -225,6 +225,7 @@ export async function createProfile(formData: FormData) {
             pushStat('stat_experience', 'EXPERIENCIA')
             pushStat('stat_level', 'LEVEL')
             pushStat('stat_stack', 'STACK')
+            pushStat('stat_repos', 'REPOS')
         } else {
             pushStat('stat_ciclo', 'CICLO')
             pushStat('stat_merito', 'MÉRITO')
@@ -435,6 +436,7 @@ export async function updateProfile(id: string, formData: FormData) {
                 pushStat('stat_experience', 'EXPERIENCIA')
                 pushStat('stat_level', 'LEVEL')
                 pushStat('stat_stack', 'STACK')
+                pushStat('stat_repos', 'REPOS')
             } else {
                 pushStat('stat_ciclo', 'CICLO')
                 pushStat('stat_merito', 'MÉRITO')

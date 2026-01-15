@@ -240,6 +240,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     if (attr.label === 'EXPERIENCIA') initialStats['experience'] = attr.value
                     if (attr.label === 'LEVEL') initialStats['level'] = attr.value
                     if (attr.label === 'STACK') initialStats['stack'] = attr.value
+                    if (attr.label === 'REPOS') initialStats['repos'] = attr.value
 
                     if (attr.label === 'CICLO') initialStats['ciclo'] = attr.value
                     if (attr.label === 'MÉRITO') initialStats['merito'] = attr.value

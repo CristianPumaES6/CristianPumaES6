@@ -268,6 +268,7 @@ export const STATS_CONFIG = {
         { label: 'Experiencia', name: 'experience', placeholder: '+7 Años' },
         { label: 'Nivel Seniority', name: 'level', placeholder: 'Senior' },
         { label: 'Tech Stack', name: 'stack', placeholder: 'Full Stack' },
+        { label: 'REPOS', name: 'repos', placeholder: '50+' },
     ],
     Legal: [
         { label: 'Ciclo Académico', name: 'ciclo', placeholder: 'Noveno' },
