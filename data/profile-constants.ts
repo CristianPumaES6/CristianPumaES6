@@ -1,13 +1,43 @@
-import { Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, Scale, Gavel, FileText, Globe, Building2, HandCoins, FolderOpen, FileSignature, UserCheck, MapPinned } from 'lucide-react'
+import { Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, Scale, Gavel, FileText, Globe, Building2, HandCoins, FolderOpen, FileSignature, UserCheck, MapPinned, ShieldCheck, Layers } from 'lucide-react'
 
 export const TECH_SPECIALTIES = [
-    { id: '1', title: 'Arquitecturas Escalables', description: 'Diseño de sistemas distribuidos capaces de manejar alta concurrencia.', icon: Briefcase },
-    { id: '2', title: 'Integraciones Complejas', description: 'Conexión de ecosistemas mediante APIs REST/SOAP.', icon: Link2 },
-    { id: '3', title: 'Sistemas Críticos', description: 'Software para entornos donde el fallo no es una opción.', icon: ShieldAlert },
-    { id: '4', title: 'Optimización de Datos', description: 'Modelado y tuning de bases de datos masivas.', icon: Database },
-    { id: '5', title: 'Mobile & Offline', description: 'Apps que funcionan sin conexión en entornos remotos.', icon: Smartphone },
-    { id: '6', title: 'Liderazgo Técnico', description: 'Gestión de equipos bajo metodologías ágiles (Scrum).', icon: Users },
-]
+    {
+        id: '1',
+        title: 'Arquitectura & Escalabilidad',
+        description: 'Diseño de sistemas distribuidos de alto rendimiento capaces de manejar tráfico masivo.',
+        icon: Layers // Más visual para "arquitectura" que un maletín.
+    },
+    {
+        id: '2',
+        title: 'Integraciones de Ecosistemas',
+        description: 'Conexión de plataformas complejas mediante arquitecturas robustas de APIs REST/SOAP.',
+        icon: Link2
+    },
+    {
+        id: '3',
+        title: 'Sistemas Críticos & Resiliencia',
+        description: 'Desarrollo de software para entornos donde la alta disponibilidad es el estándar mínimo.',
+        icon: ShieldCheck
+    },
+    {
+        id: '4',
+        title: 'Ingeniería de Datos Masivos',
+        description: 'Modelado y optimización avanzada de consultas en bases de datos de gran escala.',
+        icon: Database
+    },
+    {
+        id: '5',
+        title: 'Mobile & Offline Strategy',
+        description: 'Desarrollo de aplicaciones móviles con capacidades de sincronización avanzada en entornos remotos.',
+        icon: Smartphone
+    },
+    {
+        id: '6',
+        title: 'Liderazgo Técnico & Mentoring',
+        description: 'Gestión estratégica de equipos de ingeniería bajo metodologías ágiles y mentoría técnica.',
+        icon: Users
+    },
+];
 
 export const LEGAL_SPECIALTIES = [
     // --- BLOQUE ORIGINAL: ENFOQUE ESTRATÉGICO ---
