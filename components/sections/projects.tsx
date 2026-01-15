@@ -180,25 +180,38 @@ export function Projects({ projects, yearsOfExperience, education, certification
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     whileInView={{ opacity: 1, scale: 1 }}
                                     viewport={{ once: true }}
-                                    className="p-6 rounded-2xl bg-secondary/10 border border-white/5 hover:border-primary/30 transition-all group"
+                                    className="relative overflow-hidden p-6 rounded-2xl bg-secondary/10 border border-white/5 hover:border-primary/30 transition-all group"
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
-                                            <GraduationCap className="w-5 h-5" />
+                                    {/* Background Logo Watermark */}
+                                    {edu.logoUrl && (
+                                        <div className="absolute -right-8 -bottom-8 opacity-15 pointer-events-none grayscale group-hover:grayscale-0 group-hover:opacity-25 transition-all duration-500">
+                                            <img
+                                                src={edu.logoUrl}
+                                                alt="Institution Logo"
+                                                className="w-96 h-96 object-contain transform -rotate-12 translate-x-10 translate-y-10"
+                                            />
                                         </div>
-                                        <span className={cn(
-                                            "px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest border",
-                                            edu.status === 'Completed' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
-                                        )}>
-                                            {edu.status === 'In Progress' ? 'En Curso' : (edu.status || 'Completado')}
-                                        </span>
+                                    )}
+
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary backdrop-blur-sm">
+                                                <GraduationCap className="w-5 h-5" />
+                                            </div>
+                                            <span className={cn(
+                                                "px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest border backdrop-blur-sm",
+                                                edu.status === 'Completed' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                                            )}>
+                                                {edu.status === 'In Progress' ? 'En Curso' : (edu.status || 'Completado')}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">{edu.institution}</h3>
+                                        <p className="text-sm font-medium text-slate-400 mb-4">{edu.degree}</p>
+                                        <p className="text-xs text-slate-500 font-mono flex items-center gap-2">
+                                            <Calendar className="w-3 h-3" />
+                                            {edu.period}
+                                        </p>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">{edu.institution}</h3>
-                                    <p className="text-sm font-medium text-slate-400 mb-4">{edu.degree}</p>
-                                    <p className="text-xs text-slate-500 font-mono flex items-center gap-2">
-                                        <Calendar className="w-3 h-3" />
-                                        {edu.period}
-                                    </p>
                                 </motion.div>
                             ))}
                         </div>
