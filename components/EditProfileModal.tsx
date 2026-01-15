@@ -399,10 +399,31 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         if (step < maxStep) setStep(step + 1);
     }
 
-    async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function onSubmit(event: any) {
         event.preventDefault()
         setIsPending(true)
-        const formData = new FormData(event.currentTarget)
+
+        // Find the form element or construct manually
+        let formData: FormData;
+        if (event.currentTarget instanceof HTMLFormElement) {
+            formData = new FormData(event.currentTarget);
+        } else {
+            // Fallback: try to find a form ancestor, or create empty and relying on state (but basic fields might be missing if relying solely on state and state is not fully bound for bio/name)
+            // However, best bet is to find the form if it exists.
+            const formElement = event.currentTarget.closest('form');
+            if (formElement) {
+                formData = new FormData(formElement);
+            } else {
+                formData = new FormData();
+                // Manually append basic fields assuming they are available in state or via refs (if existing). 
+                // But wait, "profile" is passed as prop. "name", "email" etc might be edited in Step 1.
+                // Let's assume there is a form element wrapping the steps. 
+                // If not, I should wrap the div in a form?
+                // Given the previous error, I will try to use `closest('form')` first.
+                // If that fails, I will manually append state variables if I can confirm they exist.
+                // For now, let's use closest('form') and if null, new FormData().
+            }
+        }
 
         // Inject Specialties manually
         formData.delete('specialties')
@@ -566,7 +587,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
                 {/* MAIN CONTENT - FLEXIBLE HEIGHT */}
                 <div className="flex-1 w-full overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle min-h-0">
-                    <div id="edit-profile-form" className="space-y-10">
+                    <form id="edit-profile-form" className="space-y-10">
 
 
                         {/* STEP 1: BASIC INFO */}
@@ -729,27 +750,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     {showEduList && (
-                                        <Reorder.Group axis="y" values={education} onReorder={setEducation} className="space-y-3">
-                                            {education.map((edu, idx) => (
-                                                <Reorder.Item key={edu._id} value={edu} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
-                                                    <div className="flex items-center gap-3">
-                                                        <GripVertical size={16} className="text-slate-600" />
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm">{edu.institution}</div>
-                                                            <div className="text-xs text-slate-500 font-mono">{edu.degree} â€¢ {edu.period}</div>
+                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                            <Reorder.Group axis="y" values={education} onReorder={setEducation} className="space-y-3">
+                                                {education.map((edu, idx) => (
+                                                    <Reorder.Item key={edu._id} value={edu} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                        <div className="flex items-center gap-3">
+                                                            <GripVertical size={16} className="text-slate-600" />
+                                                            <div>
+                                                                <div className="font-bold text-white text-sm">{edu.institution}</div>
+                                                                <div className="text-xs text-slate-500 font-mono">{edu.degree} • {edu.period}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                        <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
@@ -852,27 +875,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     {showCertList && (
-                                        <Reorder.Group axis="y" values={certifications} onReorder={setCertifications} className="space-y-3">
-                                            {certifications.map((cert, idx) => (
-                                                <Reorder.Item key={cert._id} value={cert} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
-                                                    <div className="flex items-center gap-3">
-                                                        <GripVertical size={16} className="text-slate-600" />
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm">{cert.title}</div>
-                                                            <div className="text-xs text-slate-500 font-mono">{cert.provider} â€¢ {cert.date}</div>
+                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                            <Reorder.Group axis="y" values={certifications} onReorder={setCertifications} className="space-y-3">
+                                                {certifications.map((cert, idx) => (
+                                                    <Reorder.Item key={cert._id} value={cert} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                        <div className="flex items-center gap-3">
+                                                            <GripVertical size={16} className="text-slate-600" />
+                                                            <div>
+                                                                <div className="font-bold text-white text-sm">{cert.title}</div>
+                                                                <div className="text-xs text-slate-500 font-mono">{cert.provider} • {cert.date}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                        <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
@@ -946,27 +971,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     {showProjList && (
-                                        <Reorder.Group axis="y" values={projects} onReorder={setProjects} className="space-y-3">
-                                            {projects.map((p, idx) => (
-                                                <Reorder.Item key={p._id} value={p} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
-                                                    <div className="flex items-center gap-3">
-                                                        <GripVertical size={16} className="text-slate-600" />
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm">{p.title}</div>
-                                                            <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} â€¢ {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
+                                        <div className="max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
+                                            <Reorder.Group axis="y" values={projects} onReorder={setProjects} className="space-y-3">
+                                                {projects.map((p, idx) => (
+                                                    <Reorder.Item key={p._id} value={p} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                        <div className="flex items-center gap-3">
+                                                            <GripVertical size={16} className="text-slate-600" />
+                                                            <div>
+                                                                <div className="font-bold text-white text-sm">{p.title}</div>
+                                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                        <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -1263,7 +1290,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40 rounded-b-2xl mt-auto">
@@ -1284,7 +1311,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     )}
                 </div>
             </div>
-        </div>,
+        </div >,
         document.body
     )
 }
