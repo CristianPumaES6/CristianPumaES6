@@ -1144,7 +1144,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                                 value={currentWorkExp.company}
                                                 onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, company: e.target.value })}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all font-bold placeholder:text-slate-700 font-mono"
-                                                placeholder="TRANSGAS"
+                                                placeholder="LowCodeTool"
                                             />
                                         </div>
                                         <div className="space-y-1">

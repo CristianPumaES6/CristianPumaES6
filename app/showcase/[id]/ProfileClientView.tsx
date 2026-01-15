@@ -120,13 +120,6 @@ export default function ProfileClientView({ id }: { id: string }) {
 
         return (
             <div className="bg-[#0B0F15] min-h-screen text-slate-300">
-                <nav className="fixed top-0 w-full z-50 h-16 flex items-center px-6 backdrop-blur-md border-b border-white/5 bg-[#0B0F15]/80">
-                    <Link href="/showcase" className="flex items-center gap-2 font-medium text-slate-400 hover:text-cyan-400 transition-colors">
-                        <ArrowLeft size={16} />
-                        <span>Regresar al Showcase</span>
-                    </Link>
-                </nav>
-
                 <Hero profile={profile} />
                 <About specialties={specialties?.length > 0 ? specialties : undefined} />
                 <LandingProjects
@@ -144,13 +137,6 @@ export default function ProfileClientView({ id }: { id: string }) {
 
     return (
         <div className={theme.page}>
-            <nav className={cn("fixed top-0 w-full z-50 h-16 flex items-center px-6 backdrop-blur-sm bg-white/90 border-b border-slate-100")}>
-                <Link href="/showcase" className="flex items-center gap-2 font-medium transition-colors text-slate-500 hover:text-slate-900">
-                    <ArrowLeft size={16} />
-                    <span>Back to Showcase</span>
-                </Link>
-            </nav>
-
             <main className={theme.container}>
                 <header className={theme.headerWrapper}>
                     <div className="relative py-12 text-center">

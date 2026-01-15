@@ -30,10 +30,8 @@ export function Navbar() {
         return (
             <header
                 className={cn(
-                    "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-                    isScrolled
-                        ? "bg-background/80 backdrop-blur-md border-b border-white/10 py-3"
-                        : "bg-transparent py-5"
+                    "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-transparent",
+                    isScrolled ? "py-3" : "py-4 ml-6"
                 )}
             >
                 <div className="container px-4 mx-auto flex items-center justify-start">
@@ -41,8 +39,8 @@ export function Navbar() {
                         <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
                             <ArrowLeft className="w-5 h-5 text-primary group-hover:-translate-x-1 transition-transform" />
                         </div>
-                        <span className="font-bold text-lg tracking-tight text-muted-foreground group-hover:text-primary transition-colors">
-                            Regresar al Showcase
+                        <span className="font-bold text-lg tracking-tight text-muted-foreground group-hover:text-primary transition-colors pb-0.5">
+                            Regresar
                         </span>
                     </Link>
                 </div>
