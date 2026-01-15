@@ -20,6 +20,24 @@ export function ProfileVitrina({ profiles }: { profiles: any[] }) {
     const currentTechProfile = techProfiles[techIndex];
     const currentLegalProfile = legalProfiles[legalIndex];
 
+    const content = view === "tech" ? (
+        <TechView
+            key="tech"
+            profile={currentTechProfile}
+            onNext={() => setTechIndex((prev) => (prev + 1) % techProfiles.length)}
+            onPrev={() => setTechIndex((prev) => (prev - 1 + techProfiles.length) % techProfiles.length)}
+            hasMultiple={techProfiles.length > 1}
+        />
+    ) : (
+        <LegalView
+            key="legal"
+            profile={currentLegalProfile}
+            onNext={() => setLegalIndex((prev) => (prev + 1) % legalProfiles.length)}
+            onPrev={() => setLegalIndex((prev) => (prev - 1 + legalProfiles.length) % legalProfiles.length)}
+            hasMultiple={legalProfiles.length > 1}
+        />
+    );
+
     return (
         <section id="vitrina" className="container mx-auto px-4 py-24 border-t border-white/5">
             <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-4">
@@ -45,23 +63,7 @@ export function ProfileVitrina({ profiles }: { profiles: any[] }) {
             </div>
 
             <AnimatePresence mode="wait">
-                {view === "tech" ? (
-                    <TechView
-                        key="tech"
-                        profile={currentTechProfile}
-                        onNext={() => setTechIndex((prev) => (prev + 1) % techProfiles.length)}
-                        onPrev={() => setTechIndex((prev) => (prev - 1 + techProfiles.length) % techProfiles.length)}
-                        hasMultiple={techProfiles.length > 1}
-                    />
-                ) : (
-                    <LegalView
-                        key="legal"
-                        profile={currentLegalProfile}
-                        onNext={() => setLegalIndex((prev) => (prev + 1) % legalProfiles.length)}
-                        onPrev={() => setLegalIndex((prev) => (prev - 1 + legalProfiles.length) % legalProfiles.length)}
-                        hasMultiple={legalProfiles.length > 1}
-                    />
-                )}
+                {content}
             </AnimatePresence>
         </section>
     );

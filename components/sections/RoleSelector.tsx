@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Store, Landmark, ArrowRight } from "lucide-react";
+import { User, Store, Landmark, ArrowRight, Construction } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 interface RoleCardProps {
     title: string;
@@ -23,10 +24,12 @@ function RoleCard({ title, description, icon, variant }: RoleCardProps) {
         business: "text-glow-tech", // fallback
     }[variant];
 
+    const { showToast } = useToast();
+
     const handleClick = (e: React.MouseEvent) => {
         if (variant !== "tech") {
             e.preventDefault();
-            alert("En desarrollo");
+            showToast("Módulo en desarrollo. Próximamente disponible.", "info");
         }
     };
 
@@ -64,6 +67,22 @@ function RoleCard({ title, description, icon, variant }: RoleCardProps) {
 
             {/* Interactive scanline effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent h-1 opacity-0 group-hover:animate-scanline group-hover:opacity-100" />
+
+            {/* Development Overlay */}
+            {!isInternal && (
+                <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center transition-all group-hover:bg-slate-950/70">
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-full bg-slate-900 shadow-2xl border border-yellow-500/20 mb-3 group-hover:scale-110 group-hover:border-yellow-500/50 transition-all"
+                    >
+                        <Construction className="text-yellow-500" size={32} />
+                    </motion.div>
+                    <div className="px-3 py-1 rounded bg-yellow-500/10 border border-yellow-500/20">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-yellow-500 font-bold">En Desarrollo</span>
+                    </div>
+                </div>
+            )}
         </motion.a>
     );
 }

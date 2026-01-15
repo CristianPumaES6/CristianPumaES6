@@ -44,7 +44,7 @@ export function NexoHero() {
                         <li>Infinitas posibilidades</li>
                     </ul>
                     <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-                        No busques, deja que las oportunidades te encuentren. ProCard Lleva tu negocio al futuro con la Commerce: Cartas virtuales interactivas, gestión de inventario en tiempo real y un sistema de pedidos dinámico que convierte a cada visitante en un cliente recurrente.
+                        No busques, deja que las oportunidades aparezcan. ProCard te lleva al futuro con la Commerce: Cartas virtuales interactivas, gestión de inventario en tiempo real y un sistema de pedidos dinámico que convierte a cada visitante en un cliente recurrente.
                     </p>
                 </motion.div>
 

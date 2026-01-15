@@ -71,10 +71,10 @@ export function Footer({ profile }: { profile?: any }) {
 
                 <div className="border-t border-white/5 pt-12 text-center text-xs text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-6 uppercase tracking-widest font-mono">
                     <div className="flex gap-6">
-                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> SERVER_STATUS: OPTIMAL</span>
-                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> ENCRYPTION: AES-256</span>
+                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> SERVER : Online</span>
+                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> SEGURIDAD: AES-256</span>
                     </div>
-                    <p>© {new Date().getFullYear()} {data.name}. Designed by Cristian Puma & ProCard Engineering</p>
+                    <p>© {new Date().getFullYear()} {data.name}. Designed by LowCodeTool ProCard Engineering</p>
                 </div>
             </div>
         </footer>
