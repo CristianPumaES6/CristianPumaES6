@@ -5,12 +5,16 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   /* 
      GitHub Pages Subdirectory:
      If your repo is https://github.com/user/procard, uncomment the following:
      basePath: '/procard',
   */
-  // Subdirectory: '/proCard', // Invalid config key
 };
 
 export default nextConfig;

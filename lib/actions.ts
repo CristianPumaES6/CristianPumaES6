@@ -101,13 +101,25 @@ export async function getShowcaseProfiles() {
                 socials: true,
                 experiences: true,
                 projects: {
-                    include: { tags: true }
+                    include: {
+                        tags: true,
+                        images: true
+                    },
+                    orderBy: { order: 'asc' }
                 },
                 skillCategories: {
                     include: { items: true }
                 },
-                education: true,
-                certifications: true
+                education: {
+                    orderBy: { order: 'asc' }
+                },
+                certifications: {
+                    orderBy: { order: 'asc' }
+                },
+                workExperiences: {
+                    include: { images: true },
+                    orderBy: { order: 'asc' }
+                }
             }
         })
         return profiles
@@ -133,13 +145,25 @@ export async function getProfileById(identifier: string) {
                     include: { highlights: true }
                 },
                 projects: {
-                    include: { tags: true }
+                    include: {
+                        tags: true,
+                        images: true
+                    },
+                    orderBy: { order: 'asc' }
                 },
                 skillCategories: {
                     include: { items: true }
                 },
-                education: true,
-                certifications: true
+                education: {
+                    orderBy: { order: 'asc' }
+                },
+                certifications: {
+                    orderBy: { order: 'asc' }
+                },
+                workExperiences: {
+                    include: { images: true },
+                    orderBy: { order: 'asc' }
+                }
             }
         })
         return profile
@@ -242,20 +266,26 @@ export async function createProfile(formData: FormData) {
 
         for (let i = 0; i < projectsData.length; i++) {
             const p = projectsData[i]
-            let imageUrl: string | null = null
+            let mainImageUrl: string | null = null
+            const projectImagesCreate = []
 
-            // Check for uploaded file corresponding to this index
-            const projectImage = formData.get(`project_image_${i}`) as File | null
+            // Check for uploaded files (multiple)
+            const projectFiles = formData.getAll(`project_image_${i}`) as File[]
 
-            if (projectImage && projectImage.size > 0 && projectImage.name !== 'undefined') {
-                const bytes = await projectImage.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const uploadDir = join(process.cwd(), 'public', 'uploads')
-                await mkdir(uploadDir, { recursive: true })
-                const filename = `${Date.now()}-${i}-${projectImage.name.replace(/\s/g, '_')}`
-                const filepath = join(uploadDir, filename)
-                await writeFile(filepath, buffer)
-                imageUrl = `/uploads/${filename}`
+            for (const file of projectFiles) {
+                if (file && file.size > 0 && file.name !== 'undefined') {
+                    const bytes = await file.arrayBuffer()
+                    const buffer = Buffer.from(bytes)
+                    const uploadDir = join(process.cwd(), 'public', 'uploads')
+                    await mkdir(uploadDir, { recursive: true })
+                    const filename = `${Date.now()}-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s/g, '_')}`
+                    const filepath = join(uploadDir, filename)
+                    await writeFile(filepath, buffer)
+                    const url = `/uploads/${filename}`
+
+                    projectImagesCreate.push({ url })
+                    if (!mainImageUrl) mainImageUrl = url // First one is cover
+                }
             }
 
             projectsCreate.push({
@@ -265,11 +295,15 @@ export async function createProfile(formData: FormData) {
                 description: p.desc || 'No challenge provided.',
                 solution: p.solution || 'No solution details.',
                 outcome: p.outcome || 'Successful deployment.',
-                imageUrl: imageUrl,
+                imageUrl: mainImageUrl, // Fallback cover
                 url: p.url || '',
                 highlight: true,
+                order: p.order || 0,
                 tags: {
                     create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
+                },
+                images: {
+                    create: projectImagesCreate
                 }
             })
         }
@@ -281,7 +315,8 @@ export async function createProfile(formData: FormData) {
             institution: edu.institution,
             degree: edu.degree,
             period: edu.period,
-            status: edu.status || 'Completed'
+            status: edu.status || 'Completed',
+            order: edu.order || 0 // Save Order
         }))
 
         await db.profile.create({
@@ -312,7 +347,8 @@ export async function createProfile(formData: FormData) {
                             title: c.title,
                             provider: c.provider,
                             date: c.date,
-                            url: c.url || ''
+                            url: c.url || '',
+                            order: c.order || 0 // Save Order
                         }));
                     })()
                 },
@@ -328,6 +364,8 @@ export async function createProfile(formData: FormData) {
         return { success: false }
     }
 }
+
+// ... updateProfile changes below
 
 export async function updateProfile(id: string, formData: FormData) {
     const session = await auth();
@@ -354,180 +392,292 @@ export async function updateProfile(id: string, formData: FormData) {
     }
 
     try {
-        // 1. Update Basic Info
-        await db.profile.update({
-            where: { id },
-            data: {
-                ...rawData,
-                slug: slugify(rawData.name)
-            }
-        })
-
-        // 2. Update Attributes (Stats)
-        await db.attribute.deleteMany({ where: { profileId: id } })
-
-        const stats: any[] = []
-        const pushStat = (key: string, label: string) => {
-            const value = formData.get(key) as string
-            if (value) stats.push({ label, value, profileId: id })
-        }
-
-        // Update Socials
-        await db.social.deleteMany({ where: { profileId: id } })
-        const socialLinks: any[] = []
-        const extractSocial = (platform: string, iconName: string) => {
-            const url = formData.get(`social_${platform.toLowerCase()}`) as string
-            if (url) {
-                socialLinks.push({ platform, url, iconName, profileId: id })
-            }
-        }
-        extractSocial('LinkedIn', 'Linkedin')
-        extractSocial('GitHub', 'Github')
-        extractSocial('YouTube', 'Youtube')
-        extractSocial('Email', 'Mail')
-        extractSocial('TikTok', 'Tiktok')
-
-        if (socialLinks.length > 0) {
-            await db.social.createMany({ data: socialLinks })
-        }
-
-        if (rawData.industry === 'Tech') {
-            pushStat('stat_ranking', 'RANKING')
-            pushStat('stat_experience', 'EXPERIENCIA')
-            pushStat('stat_level', 'LEVEL')
-            pushStat('stat_stack', 'STACK')
-        } else {
-            pushStat('stat_ciclo', 'CICLO')
-            pushStat('stat_merito', 'MÉRITO')
-            pushStat('stat_disponibilidad', 'DISPONIBILIDAD')
-        }
-
-        if (stats.length > 0) {
-            await db.attribute.createMany({ data: stats })
-        }
-
-        // 3. Update Specialties
-        await db.experience.deleteMany({
-            where: {
-                profileId: id,
-                type: 'Specialization'
-            }
-        })
-
-        const specialties = formData.getAll('specialties') as string[]
-        for (const spec of specialties) {
-            const [title, desc] = spec.split('|')
-            await db.experience.create({
+        await db.$transaction(async (tx) => {
+            // 1. Update Basic Info
+            await tx.profile.update({
+                where: { id },
                 data: {
+                    ...rawData,
+                    slug: slugify(rawData.name)
+                }
+            })
+
+            // 2. Update Attributes (Stats)
+            await tx.attribute.deleteMany({ where: { profileId: id } })
+
+            const stats: any[] = []
+            const pushStat = (key: string, label: string) => {
+                const value = formData.get(key) as string
+                if (value) stats.push({ label, value, profileId: id })
+            }
+
+            // Update Socials
+            await tx.social.deleteMany({ where: { profileId: id } })
+            const socialLinks: any[] = []
+            const extractSocial = (platform: string, iconName: string) => {
+                const url = formData.get(`social_${platform.toLowerCase()}`) as string
+                if (url) {
+                    socialLinks.push({ platform, url, iconName, profileId: id })
+                }
+            }
+            extractSocial('LinkedIn', 'Linkedin')
+            extractSocial('GitHub', 'Github')
+            extractSocial('YouTube', 'Youtube')
+            extractSocial('Email', 'Mail')
+            extractSocial('TikTok', 'Tiktok')
+
+            if (socialLinks.length > 0) {
+                await tx.social.createMany({ data: socialLinks })
+            }
+
+            if (rawData.industry === 'Tech') {
+                pushStat('stat_ranking', 'RANKING')
+                pushStat('stat_experience', 'EXPERIENCIA')
+                pushStat('stat_level', 'LEVEL')
+                pushStat('stat_stack', 'STACK')
+            } else {
+                pushStat('stat_ciclo', 'CICLO')
+                pushStat('stat_merito', 'MÉRITO')
+                pushStat('stat_disponibilidad', 'DISPONIBILIDAD')
+            }
+
+            if (stats.length > 0) {
+                await tx.attribute.createMany({ data: stats })
+            }
+
+            // 3. Update Specialties
+            await tx.experience.deleteMany({
+                where: {
                     profileId: id,
-                    title,
-                    organization: 'Core Competency',
-                    period: 'Continuous',
-                    type: 'Specialization',
-                    highlights: {
-                        create: [{ text: desc }]
+                    type: 'Specialization'
+                }
+            })
+
+            const specialties = formData.getAll('specialties') as string[]
+            for (const spec of specialties) {
+                const [title, desc] = spec.split('|')
+                await tx.experience.create({
+                    data: {
+                        profileId: id,
+                        title,
+                        organization: 'Core Competency',
+                        period: 'Continuous',
+                        type: 'Specialization',
+                        highlights: {
+                            create: [{ text: desc }]
+                        }
+                    }
+                })
+            }
+
+            // 4. Update Tech Stack
+            await tx.skillCategory.deleteMany({ where: { profileId: id } }) // Cascade deletes items
+
+            const techStackJson = formData.get('tech_stack_data') as string
+            const techStackData = techStackJson ? JSON.parse(techStackJson) : {}
+
+            const skillCategoriesCreate = Object.entries(techStackData).map(([category, items]: [string, any]) => {
+                if (!items || items.length === 0) return null
+                return {
+                    profileId: id,
+                    name: category,
+                    items: {
+                        create: items.map((itemName: string) => ({ name: itemName }))
                     }
                 }
-            })
-        }
+            }).filter(Boolean) as any[]
 
-        // 4. Update Tech Stack
-        await db.skillCategory.deleteMany({ where: { profileId: id } }) // Cascade deletes items
+            for (const cat of skillCategoriesCreate) {
+                await tx.skillCategory.create({
+                    data: cat
+                })
+            }
 
-        const techStackJson = formData.get('tech_stack_data') as string
-        const techStackData = techStackJson ? JSON.parse(techStackJson) : {}
+            // 5. Update Projects
+            await tx.project.deleteMany({ where: { profileId: id } })
 
-        const skillCategoriesCreate = Object.entries(techStackData).map(([category, items]: [string, any]) => {
-            if (!items || items.length === 0) return null
-            return {
-                profileId: id,
-                name: category,
-                items: {
-                    create: items.map((itemName: string) => ({ name: itemName }))
+            const projectsJson = formData.get('projects_data') as string
+            const projectsData = projectsJson ? JSON.parse(projectsJson) : []
+
+            for (let i = 0; i < projectsData.length; i++) {
+                const p = projectsData[i]
+                let imageUrl = p.existingImageUrl // Start with existing
+
+                // Collect all images (Existing + New)
+                const allImagesToCreate = []
+
+                // A. Keep existing images (passed back from frontend)
+                if (p.images && Array.isArray(p.images)) {
+                    p.images.forEach((img: any) => {
+                        allImagesToCreate.push({ url: img.url })
+                    })
                 }
-            }
-        }).filter(Boolean) as any[]
 
-        for (const cat of skillCategoriesCreate) {
-            await db.skillCategory.create({
-                data: cat
-            })
-        }
+                // B. Process NEW uploaded files (Multiple)
+                const newFiles = formData.getAll(`project_image_${i}`) as File[]
+                let newCoverUrl: string | null = null
 
-        // 5. Update Projects
-        await db.project.deleteMany({ where: { profileId: id } })
+                for (const file of newFiles) {
+                    if (file && file.size > 0 && file.name !== 'undefined') {
+                        const bytes = await file.arrayBuffer()
+                        const buffer = Buffer.from(bytes)
+                        const uploadDir = join(process.cwd(), 'public', 'uploads')
+                        await mkdir(uploadDir, { recursive: true })
+                        const filename = `${Date.now()}-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s/g, '_')}`
+                        const filepath = join(uploadDir, filename)
+                        await writeFile(filepath, buffer)
+                        const url = `/uploads/${filename}`
 
-        const projectsJson = formData.get('projects_data') as string
-        const projectsData = projectsJson ? JSON.parse(projectsJson) : []
-
-        for (let i = 0; i < projectsData.length; i++) {
-            const p = projectsData[i]
-            let imageUrl = p.existingImageUrl // Start with existing
-
-            // Check for NEW uploaded file
-            const projectImage = formData.get(`project_image_${i}`) as File | null
-
-            if (projectImage && projectImage.size > 0 && projectImage.name !== 'undefined') {
-                const bytes = await projectImage.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const uploadDir = join(process.cwd(), 'public', 'uploads')
-                await mkdir(uploadDir, { recursive: true })
-                const filename = `${Date.now()}-${i}-${projectImage.name.replace(/\s/g, '_')}`
-                const filepath = join(uploadDir, filename)
-                await writeFile(filepath, buffer)
-                imageUrl = `/uploads/${filename}`
-            }
-
-            await db.project.create({
-                data: {
-                    profileId: id,
-                    title: p.title,
-                    client: p.client || (p.type === 'Personal' ? 'Personal Project' : 'Confidential'),
-                    type: p.type || 'Laboral',
-                    description: p.desc || 'No challenge provided.',
-                    solution: p.solution || 'No solution details.',
-                    outcome: p.outcome || 'Successful deployment.',
-                    imageUrl: imageUrl,
-                    url: p.url || '',
-                    highlight: true,
-                    tags: {
-                        create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
+                        allImagesToCreate.push({ url })
+                        if (!newCoverUrl) newCoverUrl = url // Pick first new one as potential cover
                     }
                 }
-            })
-        }
 
-        // 6. Update Education (New)
-        await db.education.deleteMany({ where: { profileId: id } })
-        const educationJson = formData.get('education_data') as string
-        const educationData = educationJson ? JSON.parse(educationJson) : []
-        const educationCreate = educationData.map((edu: any) => ({
-            profileId: id,
-            institution: edu.institution,
-            degree: edu.degree,
-            period: edu.period,
-            status: edu.status || 'Completed'
-        }))
+                // Determine final cover image (New > Existing > Fallback)
+                if (newCoverUrl) {
+                    imageUrl = newCoverUrl
+                }
 
-        if (educationCreate.length > 0) {
-            await db.education.createMany({ data: educationCreate })
-        }
+                await tx.project.create({
+                    data: {
+                        profileId: id,
+                        title: p.title,
+                        client: p.client || (p.type === 'Personal' ? 'Personal Project' : 'Confidential'),
+                        type: p.type || 'Laboral',
+                        description: p.desc || 'No challenge provided.',
+                        solution: p.solution || 'No solution details.',
+                        outcome: p.outcome || 'Successful deployment.',
+                        imageUrl: imageUrl,
+                        url: p.url || '',
+                        highlight: true,
+                        order: p.order || 0, // Save order
+                        tags: {
+                            create: p.tags ? p.tags.map((tag: string) => ({ name: tag })) : []
+                        },
+                        images: {
+                            create: allImagesToCreate
+                        }
+                    }
+                })
+            }
 
-        // 7. Update Certifications (New)
-        await db.certification.deleteMany({ where: { profileId: id } })
-        const certificationsJson = formData.get('certifications_data') as string
-        const certificationsData = certificationsJson ? JSON.parse(certificationsJson) : []
-        const certificationsCreate = certificationsData.map((cert: any) => ({
-            profileId: id,
-            title: cert.title,
-            provider: cert.provider,
-            date: cert.date,
-            url: cert.url || ''
-        }))
+            // 6. Update Education (New)
+            await tx.education.deleteMany({ where: { profileId: id } })
+            const educationJson = formData.get('education_data') as string
+            const educationData = educationJson ? JSON.parse(educationJson) : []
 
-        if (certificationsCreate.length > 0) {
-            await db.certification.createMany({ data: certificationsCreate })
-        }
+            const educationCreate = []
+            for (let i = 0; i < educationData.length; i++) {
+                const edu = educationData[i]
+                let logoUrl = edu.existingLogoUrl // Start with existing
+
+                // Check for NEW uploaded file
+                const eduImage = formData.get(`education_image_${i}`) as File | null
+
+                if (eduImage && eduImage.size > 0 && eduImage.name !== 'undefined') {
+                    const bytes = await eduImage.arrayBuffer()
+                    const buffer = Buffer.from(bytes)
+                    const uploadDir = join(process.cwd(), 'public', 'uploads')
+                    await mkdir(uploadDir, { recursive: true })
+                    const filename = `${Date.now()}-edu-${i}-${eduImage.name.replace(/\s/g, '_')}`
+                    const filepath = join(uploadDir, filename)
+                    await writeFile(filepath, buffer)
+                    logoUrl = `/uploads/${filename}`
+                }
+
+                educationCreate.push({
+                    profileId: id,
+                    institution: edu.institution,
+                    degree: edu.degree,
+                    period: edu.period,
+                    status: edu.status || 'Completed',
+                    logoUrl: logoUrl,
+                    order: edu.order || 0
+                })
+            }
+
+            if (educationCreate.length > 0) {
+                await tx.education.createMany({ data: educationCreate })
+            }
+
+            // 7. Update Certifications (New)
+            await tx.certification.deleteMany({ where: { profileId: id } })
+            const certificationsJson = formData.get('certifications_data') as string
+            const certificationsData = certificationsJson ? JSON.parse(certificationsJson) : []
+            const certificationsCreate = certificationsData.map((cert: any) => ({
+                profileId: id,
+                title: cert.title,
+                provider: cert.provider,
+                date: cert.date,
+                url: cert.url || '',
+                order: cert.order || 0 // Save order
+            }))
+
+            if (certificationsCreate.length > 0) {
+                await tx.certification.createMany({ data: certificationsCreate })
+            }
+
+            // 8. Update Work Experiences (New)
+            await tx.workExperience.deleteMany({ where: { profileId: id } })
+
+            const workJson = formData.get('work_experiences_data') as string
+            const workData = workJson ? JSON.parse(workJson) : []
+
+            for (let i = 0; i < workData.length; i++) {
+                const w = workData[i]
+                let logoUrl = w.existingLogoUrl
+
+                // Handle Logo Upload
+                const logoFile = formData.get(`work_logo_${i}`) as File | null
+                if (logoFile && logoFile.size > 0 && logoFile.name !== 'undefined') {
+                    const bytes = await logoFile.arrayBuffer()
+                    const buffer = Buffer.from(bytes)
+                    const uploadDir = join(process.cwd(), 'public', 'uploads')
+                    await mkdir(uploadDir, { recursive: true })
+                    const filename = `${Date.now()}-work-logo-${i}-${logoFile.name.replace(/\\s/g, '_')}`
+                    const filepath = join(uploadDir, filename)
+                    await writeFile(filepath, buffer)
+                    logoUrl = `/uploads/${filename}`
+                }
+
+                // Handle Evidence Images
+                const evidenceCreate = []
+                // A. Existing
+                if (w.existingEvidence && Array.isArray(w.existingEvidence)) {
+                    w.existingEvidence.forEach((img: any) => evidenceCreate.push({ url: img.url }))
+                }
+                // B. New Files
+                const newEvidenceFiles = formData.getAll(`work_evidence_${i}`) as File[]
+                for (const file of newEvidenceFiles) {
+                    if (file && file.size > 0 && file.name !== 'undefined') {
+                        const bytes = await file.arrayBuffer()
+                        const buffer = Buffer.from(bytes)
+                        const uploadDir = join(process.cwd(), 'public', 'uploads')
+                        await mkdir(uploadDir, { recursive: true })
+                        const filename = `${Date.now()}-work-evidence-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\\s/g, '_')}`
+                        const filepath = join(uploadDir, filename)
+                        await writeFile(filepath, buffer)
+                        evidenceCreate.push({ url: `/uploads/${filename}` })
+                    }
+                }
+
+                await tx.workExperience.create({
+                    data: {
+                        profileId: id,
+                        company: w.company,
+                        role: w.role,
+                        period: w.period,
+                        responsibilities: w.responsibilities,
+                        achievements: w.achievements,
+                        companyLogoUrl: logoUrl,
+                        order: w.order || 0,
+                        images: {
+                            create: evidenceCreate
+                        }
+                    }
+                })
+            }
+        })
 
         revalidatePath('/showcase')
         return { success: true }
@@ -617,8 +767,12 @@ export async function importProfile(jsonContent: string) {
                         imageUrl: x.imageUrl,
                         url: x.url,
                         highlight: x.highlight,
+                        order: x.order || 0,
                         tags: {
                             create: x.tags?.map((t: any) => ({ name: t.name })) || []
+                        },
+                        images: {
+                            create: x.images?.map((img: any) => ({ url: img.url })) || []
                         }
                     })) || []
                 },
@@ -635,7 +789,9 @@ export async function importProfile(jsonContent: string) {
                         institution: x.institution,
                         degree: x.degree,
                         period: x.period,
-                        status: x.status
+                        status: x.status,
+                        logoUrl: x.logoUrl,
+                        order: x.order || 0
                     })) || []
                 },
                 certifications: {
@@ -643,11 +799,27 @@ export async function importProfile(jsonContent: string) {
                         title: x.title,
                         provider: x.provider,
                         date: x.date,
-                        url: x.url
+                        url: x.url,
+                        order: x.order || 0
+                    })) || []
+                },
+                workExperiences: {
+                    create: data.workExperiences?.map((x: any) => ({
+                        company: x.company,
+                        role: x.role,
+                        period: x.period,
+                        responsibilities: x.responsibilities,
+                        achievements: x.achievements,
+                        companyLogoUrl: x.companyLogoUrl,
+                        order: x.order || 0,
+                        images: {
+                            create: x.images?.map((img: any) => ({ url: img.url })) || []
+                        }
                     })) || []
                 }
             }
         });
+
 
         revalidatePath('/showcase');
         return { success: true };

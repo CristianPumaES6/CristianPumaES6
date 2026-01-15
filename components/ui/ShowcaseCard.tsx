@@ -23,6 +23,12 @@ interface ShowcaseProfile {
     location: string;
     attributes: Attribute[];
     socials?: { platform: string; url: string; iconName: string }[];
+    workExperiences?: any[];
+    education?: any[];
+    certifications?: any[];
+    projects?: any[];
+    skillCategories?: any[];
+    experiences?: any[];
 }
 
 // --- Variants ---

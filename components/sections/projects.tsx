@@ -1,8 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Badge } from "lucide-react"; // Wait, Badge is usually a component, let's make a simple one inline or use standard div
+import { motion, AnimatePresence } from "framer-motion";
+import { Badge, GraduationCap, Calendar, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { PROFILE } from "@/data/profile";
+import { TechIcon } from "@/components/ui/TechIcon";
+
 export function Projects({ projects, yearsOfExperience, education, certifications }: { projects?: any[], yearsOfExperience?: string | null, education?: any[], certifications?: any[] }) {
     const defaultEducation = PROFILE.education || [];
     const displayEducation = education || defaultEducation;
@@ -124,17 +128,20 @@ export function Projects({ projects, yearsOfExperience, education, certification
                                             {(project.tech || project.tags?.map((t: any) => t.name) || []).map((t: string) => (
                                                 <span
                                                     key={t}
-                                                    className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                                                    className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5"
                                                 >
+                                                    <TechIcon name={t} className="w-3 h-3" />
                                                     {t}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Visual Side */}
-                                    <div className="md:col-span-4 rounded-xl bg-accent/30 border border-border flex items-center justify-center min-h-[200px] group-hover:border-primary/30 transition-colors relative overflow-hidden">
-                                        {project.imageUrl ? (
+                                    {/* Visual Side with Rotating Gallery */}
+                                    <div className="md:col-span-4 rounded-xl bg-accent/30 border border-border flex items-center justify-center min-h-[200px] group-hover:border-primary/30 transition-colors relative overflow-hidden h-64 md:h-auto">
+                                        {project.images && project.images.length > 0 ? (
+                                            <ProjectGallery images={project.images.map((img: any) => img.url)} title={project.title} />
+                                        ) : project.imageUrl ? (
                                             <img src={project.imageUrl} alt={project.title} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity" />
                                         ) : (
                                             <div className="text-center p-4 relative z-10">
@@ -175,25 +182,38 @@ export function Projects({ projects, yearsOfExperience, education, certification
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     whileInView={{ opacity: 1, scale: 1 }}
                                     viewport={{ once: true }}
-                                    className="p-6 rounded-2xl bg-secondary/10 border border-white/5 hover:border-primary/30 transition-all group"
+                                    className="relative overflow-hidden p-6 rounded-2xl bg-secondary/10 border border-white/5 hover:border-primary/30 transition-all group"
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
-                                            <GraduationCap className="w-5 h-5" />
+                                    {/* Background Logo Watermark */}
+                                    {edu.logoUrl && (
+                                        <div className="absolute -right-8 -bottom-8 opacity-15 pointer-events-none grayscale group-hover:grayscale-0 group-hover:opacity-25 transition-all duration-500">
+                                            <img
+                                                src={edu.logoUrl}
+                                                alt="Institution Logo"
+                                                className="w-96 h-96 object-contain transform -rotate-12 translate-x-10 translate-y-10"
+                                            />
                                         </div>
-                                        <span className={cn(
-                                            "px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest border",
-                                            edu.status === 'Completed' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
-                                        )}>
-                                            {edu.status === 'In Progress' ? 'En Curso' : (edu.status || 'Completado')}
-                                        </span>
+                                    )}
+
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary backdrop-blur-sm">
+                                                <GraduationCap className="w-5 h-5" />
+                                            </div>
+                                            <span className={cn(
+                                                "px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest border backdrop-blur-sm",
+                                                edu.status === 'Completed' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                                            )}>
+                                                {edu.status === 'In Progress' ? 'En Curso' : (edu.status || 'Completado')}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">{edu.institution}</h3>
+                                        <p className="text-sm font-medium text-slate-400 mb-4">{edu.degree}</p>
+                                        <p className="text-xs text-slate-500 font-mono flex items-center gap-2">
+                                            <Calendar className="w-3 h-3" />
+                                            {edu.period}
+                                        </p>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">{edu.institution}</h3>
-                                    <p className="text-sm font-medium text-slate-400 mb-4">{edu.degree}</p>
-                                    <p className="text-xs text-slate-500 font-mono flex items-center gap-2">
-                                        <Calendar className="w-3 h-3" />
-                                        {edu.period}
-                                    </p>
                                 </motion.div>
                             ))}
                         </div>
@@ -232,7 +252,161 @@ export function Projects({ projects, yearsOfExperience, education, certification
     );
 }
 
-// Helper icons
-import { GraduationCap, Calendar, BookOpen } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+
+
+// --- POPUP / LIGHTBOX COMPONENT ---
+function ProjectGallery({ images, title }: { images: string[], title: string }) {
+    const [index, setIndex] = useState(0);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+
+    // Auto-rotate for the preview card
+    useEffect(() => {
+        if (images.length <= 1 || lightboxOpen) return;
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % images.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, [images.length, lightboxOpen]);
+
+    const openLightbox = () => {
+        setLightboxIndex(index);
+        setLightboxOpen(true);
+    };
+
+    const nextImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setLightboxIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const prevImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setLightboxIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (!lightboxOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setLightboxOpen(false);
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [lightboxOpen]);
+
+    return (
+        <>
+            {/* CARD PREVIEW */}
+            <div
+                className="absolute inset-0 w-full h-full bg-slate-900 cursor-pointer group/gallery"
+                onClick={openLightbox}
+            >
+                <AnimatePresence mode='wait'>
+                    <motion.img
+                        key={`preview-${images[index]}`}
+                        src={images[index]}
+                        alt={`${title} preview`}
+                        initial={{ opacity: 0, scale: 1.1 }}
+                        animate={{ opacity: 0.6, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1 }}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                </AnimatePresence>
+
+                {/* Overlay indicating clickability */}
+                <div className="absolute inset-0 bg-black/0 group-hover/gallery:bg-black/20 transition-colors flex items-center justify-center">
+                    <div className="opacity-0 group-hover/gallery:opacity-100 transition-opacity transform scale-90 group-hover/gallery:scale-100 bg-black/50 backdrop-blur-md text-white p-3 rounded-full border border-white/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-3 right-3 flex gap-1.5 z-10 pointer-events-none">
+                    {images.map((_, i) => (
+                        <div
+                            key={i}
+                            className={cn(
+                                "h-1 rounded-full transition-all duration-300 shadow-sm",
+                                i === index ? "bg-cyan-400 w-6" : "bg-white/30 w-1.5"
+                            )}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* LIGHTBOX PORTAL */}
+            <AnimatePresence>
+                {lightboxOpen && (
+                    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-2 md:p-4">
+
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/98 backdrop-blur-xl"
+                            onClick={() => setLightboxOpen(false)}
+                        />
+
+                        {/* Content */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className="relative w-full h-full max-w-[98vw] max-h-[95vh] flex flex-col items-center justify-center"
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setLightboxOpen(false)}
+                                className="absolute top-4 right-4 z-50 p-3 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full backdrop-blur-md transition-all border border-white/10"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+
+                            {/* Main Image */}
+                            <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-lg bg-transparent shadow-2xl">
+                                <motion.img
+                                    key={`lightbox-${images[lightboxIndex]}`}
+                                    src={images[lightboxIndex]}
+                                    alt="Full screen view"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                                />
+
+                                {/* Info Caption - Overlay at bottom */}
+                                <div className="absolute bottom-6 inset-x-0 text-center pointer-events-none">
+                                    <div className="inline-block bg-black/60 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full">
+                                        <h4 className="text-white font-bold text-lg inline mr-3">{title}</h4>
+                                        <span className="text-cyan-400 text-sm font-mono tracking-widest border-l border-white/20 pl-3">{lightboxIndex + 1} / {images.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Navigation Buttons - Fixed to screen sides */}
+                            {images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={prevImage}
+                                        className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white hover:bg-black/50 rounded-full transition-all backdrop-blur-sm border border-transparent hover:border-white/10"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                    </button>
+                                    <button
+                                        onClick={nextImage}
+                                        className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white hover:bg-black/50 rounded-full transition-all backdrop-blur-sm border border-transparent hover:border-white/10"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                    </button>
+                                </>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </>
+    )
+}
