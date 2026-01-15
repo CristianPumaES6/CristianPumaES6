@@ -93,7 +93,7 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
                 <div className="col-span-1 md:col-span-2 space-y-6">
                     <div>
                         <div className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs uppercase tracking-widest mb-4 border", flavor.badge)}>
-                            {profile.industry} PROFESSIONAL
+                            {profile.industry} PROFESIONAL
                         </div>
                         <h1 className={cn("text-4xl md:text-5xl mb-2 tracking-tighter", flavor.name)}>
                             {profile.name}
@@ -122,20 +122,20 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
                 {/* Right Column: Actions / Stats / Contact */}
                 <div className="flex flex-col justify-between border-l border-current/10 pl-8 space-y-8">
                     <div className="space-y-2">
-                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Location</span>
+                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Ubicación</span>
                         <div className="font-medium text-sm">{profile.location}</div>
                     </div>
 
                     <div className="space-y-4">
-                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Verification Status</span>
+                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Estado de Verificación</span>
                         <div className="flex items-center gap-2 text-xs">
                             <CheckCircle2 size={14} className="text-green-500" />
-                            <span className="text-green-500/80 font-mono">VALIDATED</span>
+                            <span className="text-green-500/80 font-mono">VALIDADO</span>
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Connect</span>
+                        <span className="text-[10px] uppercase opacity-40 tracking-widest">Conectar</span>
                         <div className="flex gap-4">
                             {profile.socials?.map((social, idx) => (
                                 <SocialIcon
@@ -150,7 +150,7 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
 
                     <div className="mt-auto pt-8 flex flex-col gap-3">
                         {session?.user?.id === profile.userId && (
-                            <div className="flex gap-2">
+                            <>
                                 <EditProfileModal profile={profile} onSuccess={onProfileUpdate} />
                                 <button
                                     onClick={() => {
@@ -163,52 +163,42 @@ export const ShowcaseCard = ({ profile, onProfileUpdate }: { profile: ShowcasePr
                                         downloadAnchorNode.remove();
                                     }}
                                     className={cn(
-                                        "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
+                                        "w-full py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
                                         profile.industry === 'Tech' // Access flavor from prop or just use conditional
                                             ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
                                             : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
                                     )}
                                     title="Export Profile JSON"
                                 >
-                                    <span className="sr-only">Export</span>
+                                    <span className="sr-only">Exportar</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
-                                    Export
+                                    Exportar
                                 </button>
-                            </div>
+                            </>
                         )}
 
-                        <div className="flex gap-3">
-                            <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
-                                "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center",
+                        <a href={`/showcase/${profile.slug || profile.id}`} className={cn(
+                            "w-full py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center",
+                            profile.industry === 'Tech'
+                                ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
+                                : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                        )}>
+                            Ver Perfil
+                        </a>
+                        <a
+                            href={`/cv/${profile.slug || profile.id}`}
+                            target="_blank"
+                            className={cn(
+                                "w-full py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
                                 profile.industry === 'Tech'
                                     ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
                                     : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
-                            )}>
-                                Ver Perfil
-                            </a>
-                            <a
-                                href={`/cv/${profile.slug || profile.id}`}
-                                target="_blank"
-                                className={cn(
-                                    "flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-center transition-all border flex items-center justify-center gap-2",
-                                    profile.industry === 'Tech'
-                                        ? "border-cyan-500/20 text-cyan-400 hover:border-cyan-500 hover:bg-cyan-950/30"
-                                        : "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
-                                )}
-                                title="Descargar Curriculum Formato A4"
-                            >
-                                <FileText size={16} />
-                                <span>CV (A4)</span>
-                            </a>
-                        </div>
-                        <button className={cn(
-                            "w-full py-3 px-6 rounded-lg text-sm font-bold transition-all uppercase tracking-widest",
-                            profile.industry === 'Tech'
-                                ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.3)]"
-                                : "bg-slate-900 hover:bg-slate-800 text-white"
-                        )}>
-                            {profile.industry === 'Tech' ? 'INITIALIZE_CONTACT' : 'Solicitar Entrevista'}
-                        </button>
+                            )}
+                            title="Descargar Curriculum Formato A4"
+                        >
+                            <FileText size={16} />
+                            <span>CV (A4)</span>
+                        </a>
                     </div>
                 </div>
             </div>

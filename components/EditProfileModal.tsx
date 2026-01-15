@@ -520,10 +520,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         return (
             <button
                 onClick={handleOpen}
-                className="w-full py-2.5 px-4 bg-slate-900 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all font-medium group mb-2 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
+                className="w-full py-2.5 px-4 bg-slate-900 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all font-medium group shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
             >
                 <Pencil size={14} className="group-hover:rotate-12 transition-transform" />
-                <span>Edit Identity</span>
+                <span>Editar Perfil</span>
             </button>
         )
     }
@@ -543,13 +543,13 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     <div>
                         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
                             <Pencil size={20} className="text-cyan-500" />
-                            {step === 1 && 'Edit Basic Identity'}
-                            {step === 2 && 'Excellence Metrics'}
-                            {step === 3 && (industry === 'Tech' ? 'Technical Specialties' : 'Ãreas de EspecializaciÃ³n')}
-                            {step === 4 && (industry === 'Tech' ? 'Arsenal TecnolÃ³gico' : 'Competencias JurÃ­dicas')}
-                            {step === 5 && 'Academic Foundation'}
+                            {step === 1 && 'Editar Perfil'}
+                            {step === 2 && 'Métricas de Excelencia'}
+                            {step === 3 && (industry === 'Tech' ? 'Especialidades Técnicas' : 'Ã reas de EspecializaciÃ³n')}
+                            {step === 4 && (industry === 'Tech' ? 'Arsenal Full Stack' : 'Competencias JurÃ­dicas')}
+                            {step === 5 && 'Formación'}
                             {step === 6 && (industry === 'Tech' ? 'Cursos y Certificaciones' : 'FormaciÃ³n Continua')}
-                            {step === 7 && (industry === 'Tech' ? 'Project Portfolio' : 'Experiencia & Casos')}
+                            {step === 7 && (industry === 'Tech' ? 'Portafolio de Proyectos' : 'Experiencia & Casos')}
                         </h2>
                         <p className="text-[10px] text-cyan-500 font-mono uppercase tracking-[0.2em] mt-1 opacity-70">Configuration // Phase.{step < 10 ? `0${step}` : step} // Mode.Update</p>
                     </div>

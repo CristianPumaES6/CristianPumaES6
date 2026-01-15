@@ -111,7 +111,7 @@ export default function ShowcasePage() {
             <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white font-mono">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-primary animate-pulse uppercase tracking-[0.3em] text-xs">Initializing_System...</p>
+                    <p className="text-primary animate-pulse uppercase tracking-[0.3em] text-xs">Inicializando_Sistema...</p>
                 </div>
             </div>
         );
@@ -140,7 +140,7 @@ export default function ShowcasePage() {
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
                                     className="flex items-center gap-2 bg-slate-900/50 text-slate-300 px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition-all border border-white/10 font-bold group backdrop-blur-sm"
-                                    title="Import JSON Profile"
+                                    title="Importar Perfil JSON"
                                 >
                                     <Upload size={18} className="group-hover:scale-110 transition-transform" />
                                     <span className="hidden sm:inline text-xs uppercase tracking-widest">Importar</span>
@@ -201,9 +201,9 @@ export default function ShowcasePage() {
                             )}
 
                             <div className="absolute top-full mt-2 left-0 flex gap-4 text-[10px] font-mono text-cyan-500/50 uppercase tracking-widest">
-                                <span>● Encryption: Active</span>
-                                <span>● Latency: 12ms</span>
-                                <span>● Node: PRO_CORE_V1</span>
+                                <span>● Encriptación: Activa</span>
+                                <span>● Latencia: 12ms</span>
+                                <span>● Nodo: PRO_CORE_V1</span>
                             </div>
                         </div>
                     </div>
@@ -215,11 +215,11 @@ export default function ShowcasePage() {
                 <div className="space-y-12">
                     <div className="flex items-center justify-between border-b border-white/5 pb-4">
                         <h2 className="text-sm font-mono text-slate-500 uppercase tracking-widest">
-                            {filteredProfiles.length} Profiles_Found // Total: {profiles.length}
+                            {filteredProfiles.length} Perfiles Encontrados // Total: {profiles.length}
                         </h2>
                         <div className="flex gap-4 text-[10px] font-mono text-slate-600">
-                            <span className={searchQuery ? "text-cyan-500" : ""}>FILTER: {searchQuery ? "ACTIVE" : "NONE"}</span>
-                            <span>SORT: IMPACT_DESC</span>
+                            <span className={searchQuery ? "text-cyan-500" : ""}>FILTRO: {searchQuery ? "ACTIVO" : "NINGUNO"}</span>
+                            <span>Orden: Fecha de Creación</span>
                         </div>
                     </div>
 
@@ -231,7 +231,7 @@ export default function ShowcasePage() {
                         </div>
                     ) : (
                         <div className="text-center py-20 border border-dashed border-white/5 rounded-2xl">
-                            <p className="text-slate-500 font-mono text-sm">NO_MATCHING_DATA_FOUND</p>
+                            <p className="text-slate-500 font-mono text-sm">NO_SE_ENCONTRARON_DATOS_COINCIDENTES</p>
                         </div>
                     )}
                 </div>
