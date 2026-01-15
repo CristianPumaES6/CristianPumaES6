@@ -73,13 +73,13 @@ export function Hero({ profile }: { profile?: any }) {
                             <strong className="text-3xl text-white font-bold">
                                 {data.experience}
                             </strong>
-                            <span>Years Experience</span>
+                            <span>Años Experiencia</span>
                         </div>
                         <div className="flex flex-col">
                             <strong className="text-3xl text-white font-bold">
                                 {data.ranking}
                             </strong>
-                            <span>Global Rank</span>
+                            <span>Outsystems Rank</span>
                         </div>
                     </div>
                 </motion.div>

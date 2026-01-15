@@ -1,12 +1,20 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { authenticate } from '@/lib/actions';
 import { signIn } from 'next-auth/react'; // Client side sign in for Google
 import { FcGoogle } from 'react-icons/fc';
+import { useToast } from '@/components/ui/toast';
 
 export default function LoginForm() {
     const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        if (errorMessage) {
+            showToast(errorMessage, "error");
+        }
+    }, [errorMessage, showToast]);
 
     const handleGoogleLogin = () => {
         signIn('google', { callbackUrl: '/' });

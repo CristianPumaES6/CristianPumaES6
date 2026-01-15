@@ -170,6 +170,12 @@ export const LEGAL_SPECIALTIES = [
 */
 
 export const TECH_STACK_CATEGORIES = {
+    "IA & Automation": [
+        "Antigravity", "Copilot", "Gemini", "ChatGPT", "Suno", "DeepSeek", "Grama App", "StudioIA", "TensorFlow", "OpenAI"
+    ],
+    "Frontend & UI": [
+        "Next.js", "React", "Tailwind", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
+    ],
     "Backend & Arquitectura": [
         "Node.js", "NestJS", "Express", "Sequelize", "OutSystems", "REST/SOAP", "Microservices", "Java", "C#", "Python", "Go"
     ],
@@ -178,12 +184,6 @@ export const TECH_STACK_CATEGORIES = {
     ],
     "DevOps & Infra": [
         "Docker", "Nginx", "Linux", "PM2", "DigitalOcean", "Git", "AWS", "Azure", "Kubernetes", "CI/CD"
-    ],
-    "Frontend & UI": [
-        "Next.js", "React", "Tailwind", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
-    ],
-    "IA & Automation": [
-        "Antigravity", "Copilot", "Gemini", "ChatGPT", "Suno", "DeepSeek", "Grama App", "StudioIA", "TensorFlow", "OpenAI"
     ],
     "Design & Multimedia": [
         "Figma", "Photoshop", "Illustrator", "Premiere", "CapCut", "Studio FruityLoop", "After Effects"
@@ -270,10 +270,10 @@ export const LEGAL_OPTIONS = [
 
 export const STATS_CONFIG = {
     Tech: [
-        { label: 'Ranking Global', name: 'ranking', placeholder: '#339' },
+        { label: 'Outsystems Rank', name: 'ranking', placeholder: '#339' },
         { label: 'Experiencia', name: 'experience', placeholder: '+7 Años' },
-        { label: 'Nivel Seniority', name: 'level', placeholder: 'Senior' },
-        { label: 'Tech Stack', name: 'stack', placeholder: 'Full Stack' },
+        { label: 'Nivel', name: 'level', placeholder: 'Senior' },
+        { label: 'Stack', name: 'stack', placeholder: 'Full Stack' },
         { label: 'REPOS', name: 'repos', placeholder: '50+' },
     ],
     Legal: [

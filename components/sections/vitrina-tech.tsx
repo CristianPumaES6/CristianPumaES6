@@ -96,7 +96,7 @@ export function TechView({ profile, onNext, onPrev, hasMultiple }: { profile: an
                             <div className="p-1.5 rounded-md bg-white/5 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                                 <ChevronLeft size={16} />
                             </div>
-                            <span className="text-[10px] font-mono uppercase tracking-wider">Prev_User</span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider">Anterior</span>
                         </button>
 
                         <div className="h-8 w-[1px] bg-white/10 mx-2" />
@@ -105,7 +105,7 @@ export function TechView({ profile, onNext, onPrev, hasMultiple }: { profile: an
                             onClick={onNext}
                             className="group flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all w-full justify-end"
                         >
-                            <span className="text-[10px] font-mono uppercase tracking-wider">Next_User</span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider">Siguiente</span>
                             <div className="p-1.5 rounded-md bg-white/5 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                                 <ChevronRight size={16} />
                             </div>

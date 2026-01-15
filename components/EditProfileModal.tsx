@@ -1285,18 +1285,18 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
                 <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40 rounded-b-2xl mt-auto">
                     {step > 1 ? (
-                        <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
+                        <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Anterior</button>
                     ) : (
-                        <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
+                        <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancelar</button>
                     )}
 
                     {step === 8 ? (
                         <button type="button" onClick={onSubmit} disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
-                            {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
+                            {isPending ? 'ACTUALIZANDO...' : 'ACTUALIZAR'}
                         </button>
                     ) : (
                         <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">
-                            Next
+                            Siguiente
                         </button>
                     )}
                 </div>

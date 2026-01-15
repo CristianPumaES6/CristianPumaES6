@@ -7,10 +7,11 @@ import {
     SiNestjs, SiExpress, SiSequelize,
     SiOracle, SiMysql, SiAmazondynamodb,
     SiNginx, SiLinux, SiDigitalocean, SiGit, SiGithubactions,
-    SiTailwindcss, SiFigma, SiHtml5, SiCss3, SiTypescript, SiGo
+    SiTailwindcss, SiFigma, SiHtml5, SiCss3, SiTypescript, SiGo,
+    SiAdobephotoshop, SiAdobeillustrator, SiAdobepremierepro, SiAdobeaftereffects
 } from "react-icons/si";
 import {
-    Database, Server, Cloud, Code, Cpu, Globe, Boxes, LayoutTemplate, Workflow, FileCode
+    Database, Server, Cloud, Code, Cpu, Globe, Boxes, LayoutTemplate, Workflow, FileCode, Bot, Sparkles, Music, Video, Search, Mic2, AppWindow
 } from "lucide-react";
 
 export const TechIcon = ({ name, className = "w-5 h-5" }: { name: string, className?: string }) => {
@@ -68,21 +69,22 @@ export const TechIcon = ({ name, className = "w-5 h-5" }: { name: string, classN
         "React Native": SiReact,
 
         // New AI & Design
-        "Antigravity": Boxes,
-        "Copilot": Boxes,
-        "Gemini": Globe,
+        // New AI & Design
+        "Antigravity": Sparkles,
+        "Copilot": Bot,
+        "Gemini": Sparkles,
         "ChatGPT": SiOpenai,
-        "Suno": Globe,
-        "DeepSeek": Globe,
-        "Grama App": Globe,
-        "StudioIA": Globe,
-        "Photoshop": Globe,
-        "Illustrator": Globe,
-        "Premiere": Globe,
-        "CapCut": Globe,
+        "Suno": Music,
+        "DeepSeek": Search,
+        "Grama App": AppWindow,
+        "StudioIA": Mic2,
+        "Photoshop": SiAdobephotoshop,
+        "Illustrator": SiAdobeillustrator,
+        "Premiere": SiAdobepremierepro,
+        "CapCut": Video,
         "Figma": SiFigma,
-        "Studio FruityLoop": Globe,
-        "After Effects": Globe
+        "Studio FruityLoop": Music,
+        "After Effects": SiAdobeaftereffects
     };
 
     const IconComponent = iconMap[name] || Code; // Default to Code icon

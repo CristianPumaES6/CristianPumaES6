@@ -1,9 +1,24 @@
 'use client';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { registerUser } from '@/lib/actions';
+import { useToast } from '@/components/ui/toast';
 
 export default function RegisterPage() {
     const [state, formAction] = useActionState(registerUser, null);
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        if (state?.message) {
+            // If the message contains "successful", show success, otherwise error
+            // However, registerUser likely redirects on success if I recall correctly... 
+            // Wait, registerUser calls signIn which redirects.
+            // If it returns an object with 'message', it means it failed OR it didn't redirect (e.g. error in signIn).
+            // Let's assume error if message is present, because success means redirect.
+            // But verify registerUser content again. It returns { message: '...' } on errors. 
+            // It throws error (redirect) on success.
+            showToast(state.message, "error");
+        }
+    }, [state, showToast]);
 
     return (
         <main className="flex items-center justify-center md:h-screen">
