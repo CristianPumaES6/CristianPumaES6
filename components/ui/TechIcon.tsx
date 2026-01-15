@@ -66,9 +66,28 @@ export const TechIcon = ({ name, className = "w-5 h-5" }: { name: string, classN
         "OpenAI": SiOpenai,
         "Flutter": SiFlutter,
         "React Native": SiReact,
+
+        // New AI & Design
+        "Antigravity": Boxes,
+        "Copilot": Boxes,
+        "Gemini": Globe,
+        "ChatGPT": SiOpenai,
+        "Suno": Globe,
+        "DeepSeek": Globe,
+        "Grama App": Globe,
+        "StudioIA": Globe,
+        "Photoshop": Globe,
+        "Illustrator": Globe,
+        "Premiere": Globe,
+        "CapCut": Globe,
+        "Figma": SiFigma,
+        "Studio FruityLoop": Globe,
+        "After Effects": Globe
     };
 
     const IconComponent = iconMap[name] || Code; // Default to Code icon
+
+    if (!IconComponent) return null;
 
     return <IconComponent className={className} />;
 };

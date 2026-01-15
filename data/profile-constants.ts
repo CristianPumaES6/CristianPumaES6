@@ -179,13 +179,19 @@ export const TECH_STACK_CATEGORIES = {
     "DevOps & Infra": [
         "Docker", "Nginx", "Linux", "PM2", "DigitalOcean", "Git", "AWS", "Azure", "Kubernetes", "CI/CD"
     ],
-    "Frontend & Diseño": [
-        "Next.js", "React", "Tailwind", "Figma (Concept)", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
+    "Frontend & UI": [
+        "Next.js", "React", "Tailwind", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
+    ],
+    "IA & Automation": [
+        "Antigravity", "Copilot", "Gemini", "ChatGPT", "Suno", "DeepSeek", "Grama App", "StudioIA", "TensorFlow", "OpenAI"
+    ],
+    "Design & Multimedia": [
+        "Figma", "Photoshop", "Illustrator", "Premiere", "CapCut", "Studio FruityLoop", "After Effects"
     ]
 }
 
 export const LEGAL_STACK_CATEGORIES = {
-    "Áreas de Práctica": [
+    "Areas de Practica": [
         "Litigio Civil y Comercial",
         "Derecho Penal Económico",
         "Derecho Laboral y Seguridad Social",
@@ -235,7 +241,7 @@ export const LEGAL_STACK_CATEGORIES = {
         "Logística de Operaciones y Experiencia",
         "Compliance y Gestión de Riesgos"
     ],
-    "Idiomas & Jurisdicción": [
+    "Idiomas & Jurisdiccion": [
         "Inglés Jurídico", "Francés",
         "Derecho Civil (Sistema Románico-Germánico)",
         "Derecho Común (Common Law Foundations)",

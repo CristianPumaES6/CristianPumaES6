@@ -33,15 +33,13 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
     const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
 
     // Tech Stack State
-    const [selectedStack, setSelectedStack] = useState<Record<string, string[]>>({
-        "Backend & Arquitectura": [],
-        "Bases de Datos": [],
-        "DevOps & Infra": [],
-        "Frontend & DiseÃ±o": [],
-        "Ãreas de PrÃ¡ctica": [],
-        "Herramientas LegalTech": [],
-        "Habilidades Profesionales": [],
-        "Idiomas & JurisdicciÃ³n": []
+    const [selectedStack, setSelectedStack] = useState<Record<string, string[]>>(() => {
+        const initialStack: Record<string, string[]> = {};
+        // Initialize keys dynamically from constants to ensure exact match
+        [...Object.keys(TECH_STACK_CATEGORIES), ...Object.keys(LEGAL_STACK_CATEGORIES)].forEach(key => {
+            initialStack[key] = [];
+        });
+        return initialStack;
     })
 
     // Projects State
@@ -119,16 +117,11 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
             // Load Tech Stack from SkillCategories
             if (profile.skillCategories) {
-                const stackData: any = {
-                    "Backend & Arquitectura": [],
-                    "Bases de Datos": [],
-                    "DevOps & Infra": [],
-                    "Frontend & DiseÃ±o": [],
-                    "Ãreas de PrÃ¡ctica": [],
-                    "Herramientas LegalTech": [],
-                    "Habilidades Profesionales": [],
-                    "Idiomas & JurisdicciÃ³n": []
-                }
+                const stackData: Record<string, any> = {};
+                // Initialize keys dynamically
+                [...Object.keys(TECH_STACK_CATEGORIES), ...Object.keys(LEGAL_STACK_CATEGORIES)].forEach(key => {
+                    stackData[key] = [];
+                });
                 profile.skillCategories.forEach((cat: any) => {
                     if (stackData[cat.name] !== undefined) {
                         const items = cat.items.map((i: any) => i.name)
@@ -261,6 +254,19 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         return statsValues[statName] || profile.attributes?.find((attr: any) => attr.type === 'Stat' && attr.name === statName)?.value || ''
     }
 
+    // Helper for stack selection safety
+    const isItemSelected = (category: string, item: string) => {
+        try {
+            if (!selectedStack) return false;
+            const catList = selectedStack[category];
+            if (!Array.isArray(catList)) return false;
+            return catList.includes(item);
+        } catch (e) {
+            console.error("Error checking item selection", e);
+            return false;
+        }
+    }
+
     const handleSpecialtyChange = (val: string) => {
         setSelectedSpecialties(prev =>
             prev.includes(val) ? prev.filter(s => s !== val) : [...prev, val]
@@ -268,18 +274,17 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
     }
 
     const toggleStackItem = (category: string, item: string) => {
+        console.log('Toggling:', category, item);
         setSelectedStack(prev => {
-            const currentItems = prev[category] || []
-            if (currentItems.includes(item)) {
-                return {
-                    ...prev,
-                    [category]: currentItems.filter(i => i !== item)
-                }
-            } else {
-                return {
-                    ...prev,
-                    [category]: [...currentItems, item]
-                }
+            if (!prev) return {};
+            const currentItems = prev[category] || [];
+            const newItems = currentItems.includes(item)
+                ? currentItems.filter(i => i !== item)
+                : [...currentItems, item];
+
+            return {
+                ...prev,
+                [category]: newItems
             }
         })
     }
@@ -537,10 +542,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setIsOpen(false)} />
 
             {/* Modal Container */}
-            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-5xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 h-[85vh] flex flex-col relative z-20">
+            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-5xl animate-in fade-in zoom-in-95 duration-300 h-[85vh] flex flex-col relative z-20">
 
                 {/* Header */}
-                <div className="bg-slate-950/60 px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center sticky top-0 z-30 backdrop-blur-sm">
+                <div className="bg-slate-950/60 px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center sticky top-0 z-30 backdrop-blur-sm rounded-t-2xl">
                     <div>
                         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
                             <Pencil size={20} className="text-cyan-500" />
@@ -559,8 +564,9 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle">
-                    <form id="edit-profile-form" onSubmit={onSubmit} className="space-y-10">
+                {/* MAIN CONTENT - FLEXIBLE HEIGHT */}
+                <div className="flex-1 w-full overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle min-h-0">
+                    <div id="edit-profile-form" className="space-y-10">
 
 
                         {/* STEP 1: BASIC INFO */}
@@ -582,7 +588,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                 </label>
                             </div>
 
-                            <div className="space-y-4 text-slate-900">
+                            <div className="space-y-4 text-slate-200">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Nombre</label><input name="firstName" defaultValue={profile.firstName} placeholder="Ej: Unlocking" className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
                                     <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Apellido</label><input name="lastName" defaultValue={profile.lastName} placeholder="Ej: Digital Resilience" className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
@@ -633,7 +639,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                             <div className="grid grid-cols-2 gap-4">
                                 {(industry === 'Tech' ? STATS_CONFIG.Tech : STATS_CONFIG.Legal).map((stat) => (
                                     <div key={stat.name}>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">{stat.label}</label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">{stat.label}</label>
                                         <input
                                             name={`stat_${stat.name}`}
                                             defaultValue={getStatValue(stat.name)}
@@ -686,21 +692,24 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     <div key={catName} className="bg-slate-950 p-5 rounded-2xl border border-white/10 shadow-lg">
                                         <h4 className="text-sm font-bold text-slate-200 uppercase tracking-widest border-l-4 border-cyan-500 pl-3 mb-4">{catName}</h4>
                                         <div className="space-y-2">
-                                            {items.map(item => (
-                                                <label key={item} className="flex items-center gap-3 cursor-pointer group">
-                                                    <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500' : 'bg-slate-900 border-white/20 group-hover:border-cyan-400'}`}>
-                                                        {selectedStack[catName]?.includes(item) && <CheckCircle2 size={14} className="text-white" />}
-                                                    </div>
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only"
-                                                        checked={selectedStack[catName]?.includes(item) || false}
-                                                        onChange={() => toggleStackItem(catName, item)}
-                                                    />
-                                                    {industry === 'Tech' && <TechIcon name={item} className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors" />}
-                                                    <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-200 font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>{item}</span>
-                                                </label>
-                                            ))}
+                                            {items.map(item => {
+                                                const isSelected = isItemSelected(catName, item);
+                                                return (
+                                                    <label key={item} className="flex items-center gap-3 cursor-pointer group">
+                                                        <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${isSelected ? 'bg-cyan-500 border-cyan-500' : 'bg-slate-900 border-white/20 group-hover:border-cyan-400'}`}>
+                                                            {isSelected && <CheckCircle2 size={14} className="text-white" />}
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="sr-only"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleStackItem(catName, item)}
+                                                        />
+                                                        {industry === 'Tech' && <TechIcon name={item} className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors" />}
+                                                        <span className={`text-sm ${isSelected ? 'text-slate-200 font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>{item}</span>
+                                                    </label>
+                                                )
+                                            })}
                                         </div>
                                     </div>
                                 ))}
@@ -1254,10 +1263,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                 </div>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
 
-                <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40">
+                <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40 rounded-b-2xl mt-auto">
                     {step > 1 ? (
                         <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
                     ) : (
@@ -1265,7 +1274,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     )}
 
                     {step === 8 ? (
-                        <button type="submit" form="edit-profile-form" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                        <button type="button" onClick={onSubmit} disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
                             {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
                         </button>
                     ) : (
@@ -1279,3 +1288,4 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         document.body
     )
 }
+

@@ -20,15 +20,21 @@ export function TechView({ profile, onNext, onPrev, hasMultiple }: { profile: an
 
     // Filter projects
     const allProjects = profile.projects || [];
-    const displayProjects = allProjects.filter((p: any) =>
-        projectFilter === 'public' ? p.client !== 'Confidential' : p.client === 'Confidential'
-    );
+    const publicProjects = allProjects.filter((p: any) => p.client !== 'Confidential');
+    const privateProjects = allProjects.filter((p: any) => p.client === 'Confidential');
+
+    const displayProjects = projectFilter === 'public' ? publicProjects : privateProjects;
     const activeProject = displayProjects[projectIndex] || displayProjects[0] || null;
 
-    // Reset index when filter changes
+    // Reset index when filter changes & Auto-switch if empty
     useEffect(() => {
         setProjectIndex(0);
-    }, [projectFilter]);
+        if (projectFilter === 'public' && publicProjects.length === 0 && privateProjects.length > 0) {
+            setProjectFilter('private');
+        } else if (projectFilter === 'private' && privateProjects.length === 0 && publicProjects.length > 0) {
+            setProjectFilter('public');
+        }
+    }, [projectFilter, publicProjects.length, privateProjects.length]);
 
     return (
         <motion.div
@@ -82,13 +88,27 @@ export function TechView({ profile, onNext, onPrev, hasMultiple }: { profile: an
                 </div>
 
                 {hasMultiple && (
-                    <div className="flex justify-between items-center bg-[#0a0b10] border border-white/10 rounded-xl p-3 shadow-lg">
-                        <button onClick={onPrev} className="p-2 hover:bg-white/5 rounded-lg text-zinc-400 hover:text-white transition flex items-center gap-2 text-xs font-mono uppercase">
-                            <ChevronLeft size={16} /> Prev_User
+                    <div className="flex justify-between items-center bg-[#0a0b10] border border-white/10 rounded-xl p-1 shadow-lg">
+                        <button
+                            onClick={onPrev}
+                            className="group flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all w-full justify-start"
+                        >
+                            <div className="p-1.5 rounded-md bg-white/5 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                                <ChevronLeft size={16} />
+                            </div>
+                            <span className="text-[10px] font-mono uppercase tracking-wider">Prev_User</span>
                         </button>
-                        <span className="text-[10px] text-zinc-600 font-mono">SWITCH_PROFILE</span>
-                        <button onClick={onNext} className="p-2 hover:bg-white/5 rounded-lg text-zinc-400 hover:text-white transition flex items-center gap-2 text-xs font-mono uppercase">
-                            Next_User <ChevronRight size={16} />
+
+                        <div className="h-8 w-[1px] bg-white/10 mx-2" />
+
+                        <button
+                            onClick={onNext}
+                            className="group flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all w-full justify-end"
+                        >
+                            <span className="text-[10px] font-mono uppercase tracking-wider">Next_User</span>
+                            <div className="p-1.5 rounded-md bg-white/5 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                                <ChevronRight size={16} />
+                            </div>
                         </button>
                     </div>
                 )}
@@ -105,7 +125,7 @@ export function TechView({ profile, onNext, onPrev, hasMultiple }: { profile: an
                                     projectFilter === 'public' ? "bg-primary/20 text-primary border border-primary/20" : "text-zinc-500 hover:text-white"
                                 )}
                             >
-                                <Globe size={12} /> Public
+                                <Globe size={12} /> Public ({publicProjects.length})
                             </button>
                             <button
                                 onClick={() => setProjectFilter('private')}
@@ -113,7 +133,7 @@ export function TechView({ profile, onNext, onPrev, hasMultiple }: { profile: an
                                     projectFilter === 'private' ? "bg-purple-500/20 text-purple-400 border border-purple-500/20" : "text-zinc-500 hover:text-white"
                                 )}
                             >
-                                <Lock size={12} /> Private
+                                <Lock size={12} /> Private ({privateProjects.length})
                             </button>
                         </div>
                         <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">

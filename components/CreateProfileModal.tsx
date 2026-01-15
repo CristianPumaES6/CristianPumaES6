@@ -20,11 +20,13 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
         "Backend & Arquitectura": [],
         "Bases de Datos": [],
         "DevOps & Infra": [],
-        "Frontend & Diseño": [],
-        "Áreas de Práctica": [],
+        "Frontend & UI": [],
+        "IA & Automation": [],
+        "Design & Multimedia": [],
+        "Areas de Practica": [],
         "Herramientas LegalTech": [],
         "Habilidades Profesionales": [],
-        "Idiomas & Jurisdicción": []
+        "Idiomas & Jurisdiccion": []
     })
 
     // Project State
@@ -187,7 +189,9 @@ export function CreateProfileModal({ onSuccess, trigger }: { onSuccess?: () => v
                 "Backend & Arquitectura": [],
                 "Bases de Datos": [],
                 "DevOps & Infra": [],
-                "Frontend & Diseño": [],
+                "Frontend & UI": [],
+                "IA & Automatización": [],
+                "Diseño & Multimedia": [],
                 "Áreas de Práctica": [],
                 "Herramientas LegalTech": [],
                 "Habilidades Profesionales": [],
