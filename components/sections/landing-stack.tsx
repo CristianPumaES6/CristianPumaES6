@@ -62,7 +62,7 @@ export function LandingStack({ stack, repos }: { stack?: any[], repos?: string }
                 </div>
 
                 {/* Grid of 4 Stack Lists (Clean Style) */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 px-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 px-4 max-h-[500px] overflow-y-auto custom-scrollbar pb-2">
                     {stack.map((group, idx) => {
                         const Icon = getCategoryIcon(group.name || group.category);
                         return (

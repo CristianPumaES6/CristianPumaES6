@@ -403,26 +403,16 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         event.preventDefault()
         setIsPending(true)
 
-        // Find the form element or construct manually
+        // Find the form element
         let formData: FormData;
-        if (event.currentTarget instanceof HTMLFormElement) {
-            formData = new FormData(event.currentTarget);
+        const formElement = document.getElementById('edit-profile-form') as HTMLFormElement;
+
+        if (formElement) {
+            formData = new FormData(formElement);
         } else {
-            // Fallback: try to find a form ancestor, or create empty and relying on state (but basic fields might be missing if relying solely on state and state is not fully bound for bio/name)
-            // However, best bet is to find the form if it exists.
-            const formElement = event.currentTarget.closest('form');
-            if (formElement) {
-                formData = new FormData(formElement);
-            } else {
-                formData = new FormData();
-                // Manually append basic fields assuming they are available in state or via refs (if existing). 
-                // But wait, "profile" is passed as prop. "name", "email" etc might be edited in Step 1.
-                // Let's assume there is a form element wrapping the steps. 
-                // If not, I should wrap the div in a form?
-                // Given the previous error, I will try to use `closest('form')` first.
-                // If that fails, I will manually append state variables if I can confirm they exist.
-                // For now, let's use closest('form') and if null, new FormData().
-            }
+            console.error("Form element 'edit-profile-form' not found.");
+            // Panic fallback: try to create empty payload but this will likely fail validation
+            formData = new FormData();
         }
 
         // Inject Specialties manually
