@@ -392,7 +392,7 @@ export async function updateProfile(id: string, formData: FormData) {
     }
 
     try {
-        await db.$transaction(async (tx) => {
+        await db.$transaction(async (tx: any) => {
             // 1. Update Basic Info
             await tx.profile.update({
                 where: { id },
@@ -721,7 +721,7 @@ export async function importProfile(jsonContent: string) {
         // We remove userId to assign to current user
         const {
             id, userId, createdAt, updatedAt, slug,
-            attributes, socials, experiences, projects, skillCategories, education, certifications,
+            attributes, socials, experiences, projects, skillCategories, education, certifications, workExperiences,
             ...primitiveFields
         } = data;
 
