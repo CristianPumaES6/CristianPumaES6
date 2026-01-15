@@ -60,6 +60,23 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         url: '' as string // New URL field
     })
 
+    // Work Experience State
+    const [workExperiences, setWorkExperiences] = useState<any[]>([])
+    const [currentWorkExp, setCurrentWorkExp] = useState({
+        company: '',
+        role: '',
+        period: '',
+        responsibilities: '',
+        achievements: '',
+        logoFile: null as File | null,
+        existingLogoUrl: null as string | null,
+        logoUrl: '',
+        evidenceFiles: [] as File[],
+        existingEvidence: [] as any[],
+        _id: ''
+    })
+    const [showWorkList, setShowWorkList] = useState(true)
+
     // Education State
     const [education, setEducation] = useState<any[]>([])
     const [currentEdu, setCurrentEdu] = useState({
@@ -139,6 +156,44 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                         url: p.url || ''
                     }))
                 setProjects(loadedProjects)
+            }
+
+            // Load Work Experiences
+            if (profile.workExperiences) {
+                const loadedWork = profile.workExperiences
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((w: any) => ({
+                        _id: w.id || Math.random().toString(36).substr(2, 9),
+                        company: w.company,
+                        role: w.role,
+                        period: w.period,
+                        responsibilities: w.responsibilities,
+                        achievements: w.achievements,
+                        existingLogoUrl: w.companyLogoUrl,
+                        logoUrl: w.companyLogoUrl || '', // For display
+                        existingEvidence: w.images || [],
+                        evidenceFiles: []
+                    }))
+                setWorkExperiences(loadedWork)
+            }
+
+            // Load Work Experiences
+            if (profile.workExperiences) {
+                const loadedWork = profile.workExperiences
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((w: any) => ({
+                        _id: w.id || Math.random().toString(36).substr(2, 9),
+                        company: w.company,
+                        role: w.role,
+                        period: w.period,
+                        responsibilities: w.responsibilities,
+                        achievements: w.achievements,
+                        existingLogoUrl: w.companyLogoUrl,
+                        logoUrl: w.companyLogoUrl || '', // For display
+                        existingEvidence: w.images || [],
+                        evidenceFiles: []
+                    }))
+                setWorkExperiences(loadedWork)
             }
 
             // ... (rest of loading logic) ...
@@ -250,6 +305,40 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         })
     }
 
+    // Work Experience Handlers
+    const handleAddWorkExp = () => {
+        if (!currentWorkExp.company || !currentWorkExp.role) return
+        setWorkExperiences([...workExperiences, {
+            ...currentWorkExp,
+            _id: currentWorkExp._id || Math.random().toString(36).substr(2, 9)
+        }])
+        setCurrentWorkExp({
+            company: '',
+            role: '',
+            period: '',
+            responsibilities: '',
+            achievements: '',
+            logoFile: null,
+            existingLogoUrl: null,
+            logoUrl: '',
+            evidenceFiles: [],
+            existingEvidence: [],
+            _id: ''
+        })
+    }
+
+    const editWorkExp = (idx: number) => {
+        const w = workExperiences[idx]
+        setCurrentWorkExp({
+            ...w,
+            evidenceFiles: [], // Reset new files
+            logoFile: null
+        })
+        const newWork = [...workExperiences]
+        newWork.splice(idx, 1)
+        setWorkExperiences(newWork)
+    }
+
     // Education Logic
     const handleAddEducation = () => {
         if (!currentEdu.institution || !currentEdu.degree || !currentEdu.period) return;
@@ -293,7 +382,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
-        const maxStep = 7;
+        const maxStep = 8;
         if (step < maxStep) setStep(step + 1);
     }
 
@@ -323,6 +412,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         }
         formData.append('certifications_data', JSON.stringify(finalCertifications.map((item, idx) => ({ ...item, order: idx }))))
 
+        // Inject Projects
         const finalProjects = [...projects]
         if (currentProject.title) {
             finalProjects.push({ ...currentProject, _id: 'temp_new' })
@@ -337,27 +427,58 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             outcome: p.outcome,
             tags: p.tags,
             existingImageUrl: p.existingImageUrl,
-            images: p.images, // Pass back existing gallery
+            images: p.images,
             url: p.url,
             order: index
         }))))
 
+        // Append Project Files
         finalProjects.forEach((p, index) => {
-            // New Multiple Files Logic
             if (p.imageFiles && p.imageFiles.length > 0) {
                 p.imageFiles.forEach((file: File) => {
                     formData.append(`project_image_${index}`, file)
                 })
             } else if (p.imageFile) {
-                // Fallback for singular legacy state
                 formData.append(`project_image_${index}`, p.imageFile)
             }
         })
 
-        // Process Education Images
+        // Append Education Images
         finalEducation.forEach((edu, index) => {
             if (edu.imageFile) {
                 formData.append(`education_image_${index}`, edu.imageFile)
+            }
+        })
+
+        // Inject Work Experience
+        let finalWork = [...workExperiences]
+        if (currentWorkExp.company) {
+            finalWork.push({ ...currentWorkExp, _id: 'temp_new' })
+        }
+
+        const workData = finalWork.map((w, idx) => ({
+            company: w.company,
+            role: w.role,
+            period: w.period,
+            responsibilities: w.responsibilities,
+            achievements: w.achievements,
+            existingLogoUrl: w.existingLogoUrl,
+            existingEvidence: w.images || w.existingEvidence, // specific fix for loading legacy
+            order: idx
+        }))
+        formData.append('work_experiences_data', JSON.stringify(workData))
+
+        // Append Work Images
+        finalWork.forEach((w, idx) => {
+            // Company Logo
+            if (w.logoFile) {
+                formData.append(`work_logo_${idx}`, w.logoFile)
+            }
+            // Evidence Gallery
+            if (w.evidenceFiles && w.evidenceFiles.length > 0) {
+                w.evidenceFiles.forEach((file: File) => {
+                    formData.append(`work_evidence_${idx}`, file)
+                })
             }
         })
 
@@ -948,6 +1069,181 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                             </div>
                         </div>
 
+
+
+                        {/* STEP 8: Experience */}
+                        <div className={step === 8 ? 'block' : 'hidden'}>
+
+
+                            <div className="grid lg:grid-cols-2 gap-12">
+                                {/* LEFT: List */}
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Career History</h3>
+                                        <button type="button" onClick={() => setShowWorkList(!showWorkList)} className="text-slate-500 hover:text-white transition-colors">
+                                            {showWorkList ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                        </button>
+                                    </div>
+
+                                    {showWorkList && (
+                                        <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {workExperiences.length === 0 && (
+                                                <div className="p-8 border border-white/5 border-dashed rounded-xl text-center text-slate-600 font-mono text-xs uppercase tracking-widest">
+                                                    No career records found.
+                                                </div>
+                                            )}
+                                            <Reorder.Group axis="y" values={workExperiences} onReorder={setWorkExperiences}>
+                                                {workExperiences.map((work, idx) => (
+                                                    <Reorder.Item key={work._id || idx} value={work}>
+                                                        <div className="group p-4 bg-slate-900 border border-white/5 rounded-xl hover:border-cyan-500/30 transition-all flex items-start gap-4 mb-3">
+                                                            <div className="cursor-grab text-slate-600 hover:text-slate-400 mt-1"><GripVertical size={16} /></div>
+                                                            <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center shrink-0 overflow-hidden">
+                                                                {(work.logoUrl || work.existingLogoUrl) ? (
+                                                                    <img src={work.logoUrl || work.existingLogoUrl} alt="Logo" className="w-full h-full object-contain" />
+                                                                ) : (
+                                                                    <Briefcase className="text-slate-500" size={20} />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-bold text-white truncate">{work.company}</h4>
+                                                                <p className="text-xs text-cyan-400 font-mono mb-1">{work.role}</p>
+                                                                <p className="text-[10px] text-slate-500">{work.period}</p>
+                                                            </div>
+                                                            <div className="flex flex-col gap-2">
+                                                                <button type="button" onClick={() => editWorkExp(idx)} className="p-2 text-slate-500 hover:text-cyan-400 hover:bg-cyan-950/30 rounded-lg transition-all"><Pencil size={14} /></button>
+                                                                <button type="button" onClick={() => {
+                                                                    const newWork = [...workExperiences]
+                                                                    newWork.splice(idx, 1)
+                                                                    setWorkExperiences(newWork)
+                                                                }} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-950/30 rounded-lg transition-all"><Trash2 size={14} /></button>
+                                                            </div>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* RIGHT: Form */}
+                                <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/10 space-y-5">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Company *</label>
+                                            <input
+                                                type="text"
+                                                value={currentWorkExp.company}
+                                                onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, company: e.target.value })}
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all font-bold placeholder:text-slate-700 font-mono"
+                                                placeholder="TRANSGAS"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Job Title *</label>
+                                            <input
+                                                type="text"
+                                                value={currentWorkExp.role}
+                                                onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, role: e.target.value })}
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-slate-700"
+                                                placeholder="Senior Developer"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Period *</label>
+                                        <input
+                                            type="text"
+                                            value={currentWorkExp.period}
+                                            onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, period: e.target.value })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-slate-700 font-mono"
+                                            placeholder="2025 - Present"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Responsibilities</label>
+                                        <textarea
+                                            rows={3}
+                                            value={currentWorkExp.responsibilities}
+                                            onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, responsibilities: e.target.value })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-slate-700 resize-none"
+                                            placeholder="Describe your key responsibilities..."
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Key Achievements</label>
+                                        <textarea
+                                            rows={3}
+                                            value={currentWorkExp.achievements}
+                                            onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, achievements: e.target.value })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-slate-700 resize-none"
+                                            placeholder="- Increased performance by 20%&#10;- Led a team of 5 developers"
+                                        />
+                                    </div>
+
+                                    {/* Logo Upload */}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Company Logo</label>
+                                        <div className="flex items-center gap-4 p-3 bg-black/40 border border-white/10 rounded-lg">
+                                            <div className="w-12 h-12 rounded bg-white/5 flex items-center justify-center overflow-hidden border border-white/10">
+                                                {(currentWorkExp.logoUrl || currentWorkExp.existingLogoUrl) ? (
+                                                    <img src={currentWorkExp.logoUrl || currentWorkExp.existingLogoUrl || ''} className="w-full h-full object-contain" />
+                                                ) : <ImageIcon size={20} className="text-slate-600" />}
+                                            </div>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-cyan-950 file:text-cyan-400 hover:file:bg-cyan-900 cursor-pointer"
+                                                onChange={(e) => {
+                                                    if (e.target.files && e.target.files[0]) {
+                                                        const file = e.target.files[0]
+                                                        setCurrentWorkExp({
+                                                            ...currentWorkExp,
+                                                            logoFile: file,
+                                                            logoUrl: URL.createObjectURL(file)
+                                                        })
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Gallery Upload */}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider ml-1">Work Evidence / Projects</label>
+                                        <div className="border border-white/10 border-dashed rounded-xl p-4 text-center cursor-pointer relative hover:bg-white/5 transition-all group/upload">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                                onChange={(e) => {
+                                                    if (e.target.files && e.target.files.length > 0) {
+                                                        setCurrentWorkExp({ ...currentWorkExp, evidenceFiles: Array.from(e.target.files) })
+                                                    }
+                                                }}
+                                            />
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className="p-2 bg-white/5 rounded-full">
+                                                    <ImageIcon size={18} className="text-slate-500 group-hover:text-cyan-400" />
+                                                </div>
+                                                {currentWorkExp.evidenceFiles.length > 0 ? (
+                                                    <span className="text-xs text-cyan-400 font-mono">{currentWorkExp.evidenceFiles.length} file(s) selected</span>
+                                                ) : (
+                                                    <span className="text-[10px] text-slate-500">Upload evidence (Multiple)</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" onClick={handleAddWorkExp} className="w-full py-4 bg-cyan-950/50 border border-cyan-500/30 text-cyan-400 font-bold uppercase tracking-widest rounded-xl hover:bg-cyan-500 hover:text-black transition-all">
+                                        + Add Experience
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
 
@@ -958,7 +1254,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                         <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
                     )}
 
-                    {step === 7 ? (
+                    {step === 8 ? (
                         <button type="submit" form="edit-profile-form" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
                             {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
                         </button>

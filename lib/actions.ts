@@ -115,6 +115,10 @@ export async function getShowcaseProfiles() {
                 },
                 certifications: {
                     orderBy: { order: 'asc' }
+                },
+                workExperiences: {
+                    include: { images: true },
+                    orderBy: { order: 'asc' }
                 }
             }
         })
@@ -154,6 +158,10 @@ export async function getProfileById(identifier: string) {
                     orderBy: { order: 'asc' }
                 },
                 certifications: {
+                    orderBy: { order: 'asc' }
+                },
+                workExperiences: {
+                    include: { images: true },
                     orderBy: { order: 'asc' }
                 }
             }
@@ -608,6 +616,67 @@ export async function updateProfile(id: string, formData: FormData) {
             if (certificationsCreate.length > 0) {
                 await tx.certification.createMany({ data: certificationsCreate })
             }
+
+            // 8. Update Work Experiences (New)
+            await tx.workExperience.deleteMany({ where: { profileId: id } })
+
+            const workJson = formData.get('work_experiences_data') as string
+            const workData = workJson ? JSON.parse(workJson) : []
+
+            for (let i = 0; i < workData.length; i++) {
+                const w = workData[i]
+                let logoUrl = w.existingLogoUrl
+
+                // Handle Logo Upload
+                const logoFile = formData.get(`work_logo_${i}`) as File | null
+                if (logoFile && logoFile.size > 0 && logoFile.name !== 'undefined') {
+                    const bytes = await logoFile.arrayBuffer()
+                    const buffer = Buffer.from(bytes)
+                    const uploadDir = join(process.cwd(), 'public', 'uploads')
+                    await mkdir(uploadDir, { recursive: true })
+                    const filename = `${Date.now()}-work-logo-${i}-${logoFile.name.replace(/\\s/g, '_')}`
+                    const filepath = join(uploadDir, filename)
+                    await writeFile(filepath, buffer)
+                    logoUrl = `/uploads/${filename}`
+                }
+
+                // Handle Evidence Images
+                const evidenceCreate = []
+                // A. Existing
+                if (w.existingEvidence && Array.isArray(w.existingEvidence)) {
+                    w.existingEvidence.forEach((img: any) => evidenceCreate.push({ url: img.url }))
+                }
+                // B. New Files
+                const newEvidenceFiles = formData.getAll(`work_evidence_${i}`) as File[]
+                for (const file of newEvidenceFiles) {
+                    if (file && file.size > 0 && file.name !== 'undefined') {
+                        const bytes = await file.arrayBuffer()
+                        const buffer = Buffer.from(bytes)
+                        const uploadDir = join(process.cwd(), 'public', 'uploads')
+                        await mkdir(uploadDir, { recursive: true })
+                        const filename = `${Date.now()}-work-evidence-${i}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\\s/g, '_')}`
+                        const filepath = join(uploadDir, filename)
+                        await writeFile(filepath, buffer)
+                        evidenceCreate.push({ url: `/uploads/${filename}` })
+                    }
+                }
+
+                await tx.workExperience.create({
+                    data: {
+                        profileId: id,
+                        company: w.company,
+                        role: w.role,
+                        period: w.period,
+                        responsibilities: w.responsibilities,
+                        achievements: w.achievements,
+                        companyLogoUrl: logoUrl,
+                        order: w.order || 0,
+                        images: {
+                            create: evidenceCreate
+                        }
+                    }
+                })
+            }
         })
 
         revalidatePath('/showcase')
@@ -733,9 +802,24 @@ export async function importProfile(jsonContent: string) {
                         url: x.url,
                         order: x.order || 0
                     })) || []
+                },
+                workExperiences: {
+                    create: data.workExperiences?.map((x: any) => ({
+                        company: x.company,
+                        role: x.role,
+                        period: x.period,
+                        responsibilities: x.responsibilities,
+                        achievements: x.achievements,
+                        companyLogoUrl: x.companyLogoUrl,
+                        order: x.order || 0,
+                        images: {
+                            create: x.images?.map((img: any) => ({ url: img.url })) || []
+                        }
+                    })) || []
                 }
             }
         });
+
 
         revalidatePath('/showcase');
         return { success: true };

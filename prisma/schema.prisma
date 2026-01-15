@@ -36,9 +36,32 @@ model Profile {
   projects        Project[]
   education       Education[]
   certifications  Certification[]
-  
+  workExperiences WorkExperience[] // Add relation to Profile
+
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WorkExperience {
+  id               String        @id @default(uuid())
+  company          String
+  role             String
+  period           String
+  responsibilities String?       // Text Area
+  achievements     String?       // Text Area
+  companyLogoUrl   String?
+  order            Int           @default(0)
+  
+  images           WorkImage[]
+  profileId        String
+  profile          Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model WorkImage {
+  id               String         @id @default(uuid())
+  url              String
+  workExperienceId String
+  workExperience   WorkExperience @relation(fields: [workExperienceId], references: [id], onDelete: Cascade)
 }
 
 model Attribute {

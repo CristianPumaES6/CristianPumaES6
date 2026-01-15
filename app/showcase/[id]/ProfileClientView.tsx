@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Hero } from "@/components/sections/hero";
 import { About } from "@/components/sections/about";
 import { Projects as LandingProjects } from "@/components/sections/projects";
+import { Experience } from "@/components/sections/experience";
 import { Stack as LandingStack } from "@/components/sections/stack";
 import { Footer as LandingFooter } from "@/components/layout/footer";
 
@@ -134,6 +135,7 @@ export default function ProfileClientView({ id }: { id: string }) {
                     education={profile.education}
                     certifications={profile.certifications}
                 />
+                <Experience experiences={profile.workExperiences} />
                 <LandingStack stack={stack} />
                 <LandingFooter profile={profile} />
             </div>
@@ -282,6 +284,54 @@ export default function ProfileClientView({ id }: { id: string }) {
                                     </div>
                                 ))}
                             </div>
+
+                            {/* LEGAL WORK EXPERIENCE */}
+                            {profile.workExperiences && profile.workExperiences.length > 0 && (
+                                <div className="mt-24 pt-12 border-t border-slate-200">
+                                    <h2 className={theme.sectionHeading}>Trayectoria Profesional</h2>
+                                    <div className="space-y-12 border-l-2 border-slate-200 ml-3 pl-8 relative py-2">
+                                        {profile.workExperiences.map((work: any, i: number) => (
+                                            <div key={i} className="relative group">
+                                                {/* Timeline Node */}
+                                                <div className="absolute -left-[43px] top-1.5 w-6 h-6 rounded-full bg-white border-4 border-slate-300 group-hover:border-[#B8860B] transition-colors shadow-sm" />
+
+                                                <div className="mb-6">
+                                                    <div className="flex flex-wrap justify-between items-baseline gap-4 mb-2">
+                                                        <h3 className="text-xl font-serif font-bold text-slate-900 group-hover:text-[#B8860B] transition-colors">{work.role}</h3>
+                                                        <span className="text-xs font-bold font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase tracking-wider">{work.period}</span>
+                                                    </div>
+                                                    <div className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                                                        <Building2 size={14} />
+                                                        {work.company}
+                                                    </div>
+
+                                                    <div className="prose prose-sm text-slate-600 font-serif leading-relaxed mb-6 max-w-none">
+                                                        {work.responsibilities && <p className="mb-4">{work.responsibilities}</p>}
+                                                        {work.achievements && (
+                                                            <div className="bg-amber-50/50 p-5 border-l-2 border-[#B8860B]/50 italic text-slate-800 rounded-r-lg">
+                                                                <strong className="text-[#B8860B] not-italic text-xs uppercase tracking-wider block mb-1">Key Achievement</strong>
+                                                                {work.achievements}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Evidence Images */}
+                                                    {work.images && work.images.length > 0 && (
+                                                        <div className="flex gap-3 overflow-x-auto pb-2">
+                                                            {work.images.map((img: any, idx: number) => (
+                                                                <a key={idx} href={img.url} target="_blank" className="shrink-0 w-24 h-24 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-all grayscale hover:grayscale-0 relative group/img">
+                                                                    <img src={img.url} alt="Work Evidence" className="w-full h-full object-cover" />
+                                                                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors" />
+                                                                </a>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
