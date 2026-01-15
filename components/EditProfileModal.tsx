@@ -234,9 +234,15 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             if (profile.attributes) {
                 const initialStats: Record<string, string> = {}
                 profile.attributes.forEach((attr: any) => {
-                    if (attr.type === 'Stat') {
-                        initialStats[attr.name] = attr.value
-                    }
+                    // Map stored LABEL back to stat name key
+                    if (attr.label === 'RANKING') initialStats['ranking'] = attr.value
+                    if (attr.label === 'EXPERIENCIA') initialStats['experience'] = attr.value
+                    if (attr.label === 'LEVEL') initialStats['level'] = attr.value
+                    if (attr.label === 'STACK') initialStats['stack'] = attr.value
+
+                    if (attr.label === 'CICLO') initialStats['ciclo'] = attr.value
+                    if (attr.label === 'MÉRITO') initialStats['merito'] = attr.value
+                    if (attr.label === 'DISPONIBILIDAD') initialStats['disponibilidad'] = attr.value
                 })
                 setStatsValues(initialStats)
             }
