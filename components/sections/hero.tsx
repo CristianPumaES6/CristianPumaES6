@@ -41,7 +41,7 @@ export function Hero({ profile }: { profile?: any }) {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                         </span>
-                        <span className="font-medium tracking-wide text-xs uppercase text-primary">Open to Opportunities</span>
+                        <span className="font-medium tracking-wide text-xs uppercase text-primary">Abierto a oportunidades</span>
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight text-white">

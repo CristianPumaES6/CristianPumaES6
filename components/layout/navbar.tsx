@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Terminal, LogOut, User } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X, Terminal, LogOut, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ import { PROFILE } from "@/data/profile";
 
 export function Navbar() {
     const { data: session } = useSession();
+    const pathname = usePathname();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -20,6 +22,33 @@ export function Navbar() {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    // Check if we are in a profile detail view (e.g., /showcase/some-slug) but not the main list (/showcase)
+    const isProfilePage = pathname?.startsWith('/showcase/') && pathname !== '/showcase';
+
+    if (isProfilePage) {
+        return (
+            <header
+                className={cn(
+                    "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+                    isScrolled
+                        ? "bg-background/80 backdrop-blur-md border-b border-white/10 py-3"
+                        : "bg-transparent py-5"
+                )}
+            >
+                <div className="container px-4 mx-auto flex items-center justify-start">
+                    <Link href="/showcase" className="flex items-center gap-2 group">
+                        <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
+                            <ArrowLeft className="w-5 h-5 text-primary group-hover:-translate-x-1 transition-transform" />
+                        </div>
+                        <span className="font-bold text-lg tracking-tight text-muted-foreground group-hover:text-primary transition-colors">
+                            Regresar al Showcase
+                        </span>
+                    </Link>
+                </div>
+            </header>
+        );
+    }
 
     const navLinks = [
         { name: "BUSCAR TRABAJO", href: "#hero" },
