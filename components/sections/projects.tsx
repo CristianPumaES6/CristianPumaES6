@@ -23,6 +23,10 @@ export function Projects({ projects, yearsOfExperience, education, certification
     };
 
     const sortedEducation = [...displayEducation].sort((a, b) => {
+        // Sort by order descending if defined
+        if (a.order !== undefined && b.order !== undefined) {
+            return (b.order || 0) - (a.order || 0);
+        }
         // Extract start year from period "2016 - 2020"
         const startA = parseDate(a.period?.split('-')[0] || '');
         const startB = parseDate(b.period?.split('-')[0] || '');
@@ -42,7 +46,12 @@ export function Projects({ projects, yearsOfExperience, education, certification
     // However, if the user explicitly wants them sorted, and they are not, they might need to use the Reorder feature in EditModal.
 
     // Filter Logic
-    const allProjects = projects || PROFILE.projects;
+    const allProjects = (projects || PROFILE.projects).slice().sort((a: any, b: any) => {
+        if (a.order !== undefined && b.order !== undefined) {
+            return (b.order || 0) - (a.order || 0);
+        }
+        return 0; // maintain original if no order
+    });
     const publicProjects = allProjects.filter((p: any) => p.client !== 'Confidential');
     const privateProjects = allProjects.filter((p: any) => p.client === 'Confidential');
 
