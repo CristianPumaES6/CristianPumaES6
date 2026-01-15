@@ -58,12 +58,12 @@ export function Hero({ profile }: { profile?: any }) {
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <Button size="lg" className="gap-2 bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,255,255,0.2)] rounded-full px-8 transition-all duration-300 transform hover:-translate-y-1" asChild>
                             <Link href="#projects">
-                                View Case Studies <ArrowRight className="w-4 h-4" />
+                                Visualizar proyectos <ArrowRight className="w-4 h-4" />
                             </Link>
                         </Button>
                         <Button size="lg" variant="ghost" className="gap-2 text-white hover:bg-white/5 rounded-full px-8" asChild>
                             <Link href="#contact">
-                                Contact Me
+                                Contactar
                             </Link>
                         </Button>
                     </div>

@@ -10,7 +10,7 @@ import { Hero } from "@/components/sections/hero";
 import { About } from "@/components/sections/about";
 import { Projects as LandingProjects } from "@/components/sections/projects";
 import { Experience } from "@/components/sections/experience";
-import { Stack as LandingStack } from "@/components/sections/stack";
+import { LandingStack } from "@/components/sections/landing-stack";
 import { Footer as LandingFooter } from "@/components/layout/footer";
 
 const THEMES = {
@@ -122,6 +122,10 @@ export default function ProfileClientView({ id }: { id: string }) {
             <div className="bg-[#0B0F15] min-h-screen text-slate-300">
                 <Hero profile={profile} />
                 <About specialties={specialties?.length > 0 ? specialties : undefined} />
+                <LandingStack
+                    stack={stack}
+                    repos={profile.attributes?.find((a: any) => a.label === 'REPOS')?.value || '50+'}
+                />
                 <LandingProjects
                     projects={profile.projects}
                     yearsOfExperience={yearsOfExp}
@@ -129,7 +133,7 @@ export default function ProfileClientView({ id }: { id: string }) {
                     certifications={profile.certifications}
                 />
                 <Experience experiences={profile.workExperiences} />
-                <LandingStack stack={stack} />
+
                 <LandingFooter profile={profile} />
             </div>
         );

@@ -398,8 +398,7 @@ export async function updateProfile(id: string, formData: FormData) {
             await tx.profile.update({
                 where: { id },
                 data: {
-                    ...rawData,
-                    slug: slugify(rawData.name)
+                    ...rawData
                 }
             })
 
