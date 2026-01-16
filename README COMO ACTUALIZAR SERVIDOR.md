@@ -59,6 +59,12 @@ npm ci
 # 2. Generar cliente de base de datos (¡Muy importante!)
 npx prisma generate
 
+
+   Este comando le dice a Prisma que cree la estructura (tablas) en tu base de datos nueva.
+    ```bash
+    npx prisma db push
+    ```
+
 # 3. Construir la aplicación
 # Si tu servidor tiene poca RAM (1GB), crea Swap antes o esto puede fallar.
 npm run build
@@ -113,6 +119,14 @@ Para que tu web sea accesible desde el puerto 80 (HTTP) en lugar del 3000.
     sudo nginx -t
     sudo systemctl restart nginx
     ```
+    ```
+
+3.  Activar el sitio y reiniciar Nginx:
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/procard /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl restart nginx
+    ```
 
 ## 6. (Opcional) Activar HTTPS con Certbot
 
@@ -132,8 +146,9 @@ sudo certbot --nginx -d procard.outsystems.club -d outsystems.club
 *   **Ver logs:** `pm2 logs procard`
 *   **Reiniciar después de cambios:**
     ```bash
+    rm -rf .next
     git pull
-    npm ci
+    npm ci 
     npx prisma generate
     npm run build
     pm2 restart procard
