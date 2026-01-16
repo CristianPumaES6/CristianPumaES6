@@ -102,6 +102,9 @@ Para que tu web sea accesible desde el puerto 80 (HTTP) en lugar del 3000.
         listen 80;
         server_name procard.outsystems.club outsystems.club; # Tu dominio aquí
 
+        # AUMENTAR LÍMITE DE SUBIDA (Importante para evitar error 413)
+        client_max_body_size 25M;
+
         location / {
             proxy_pass http://localhost:2000; # El puerto de tu .env
             proxy_http_version 1.1;
