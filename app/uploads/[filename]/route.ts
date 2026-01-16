@@ -8,8 +8,9 @@ import fs from 'fs';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { filename: string } }
+    props: { params: Promise<{ filename: string }> }
 ) {
+    const params = await props.params;
     const filename = params.filename;
 
     // 1. Definir la ruta real en el disco
