@@ -1,13 +1,43 @@
-import { Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, Scale, Gavel, FileText, Globe, Building2, HandCoins, FolderOpen, FileSignature, UserCheck, MapPinned } from 'lucide-react'
+import { Briefcase, Link2, ShieldAlert, Database, Smartphone, Users, Building, Scale, Gavel, FileText, Globe, Building2, HandCoins, FolderOpen, FileSignature, UserCheck, MapPinned, ShieldCheck, Layers } from 'lucide-react'
 
 export const TECH_SPECIALTIES = [
-    { id: '1', title: 'Arquitecturas Escalables', description: 'Diseño de sistemas distribuidos capaces de manejar alta concurrencia.', icon: Briefcase },
-    { id: '2', title: 'Integraciones Complejas', description: 'Conexión de ecosistemas mediante APIs REST/SOAP.', icon: Link2 },
-    { id: '3', title: 'Sistemas Críticos', description: 'Software para entornos donde el fallo no es una opción.', icon: ShieldAlert },
-    { id: '4', title: 'Optimización de Datos', description: 'Modelado y tuning de bases de datos masivas.', icon: Database },
-    { id: '5', title: 'Mobile & Offline', description: 'Apps que funcionan sin conexión en entornos remotos.', icon: Smartphone },
-    { id: '6', title: 'Liderazgo Técnico', description: 'Gestión de equipos bajo metodologías ágiles (Scrum).', icon: Users },
-]
+    {
+        id: '1',
+        title: 'Arquitectura & Escalabilidad',
+        description: 'Diseño de sistemas distribuidos de alto rendimiento capaces de manejar tráfico masivo.',
+        icon: Layers // Más visual para "arquitectura" que un maletín.
+    },
+    {
+        id: '2',
+        title: 'Integraciones de Ecosistemas',
+        description: 'Conexión de plataformas complejas mediante arquitecturas robustas de APIs REST/SOAP.',
+        icon: Link2
+    },
+    {
+        id: '3',
+        title: 'Sistemas Críticos & Resiliencia',
+        description: 'Desarrollo de software para entornos donde la alta disponibilidad es el estándar mínimo.',
+        icon: ShieldCheck
+    },
+    {
+        id: '4',
+        title: 'Ingeniería de Datos Masivos',
+        description: 'Modelado y optimización avanzada de consultas en bases de datos de gran escala.',
+        icon: Database
+    },
+    {
+        id: '5',
+        title: 'Mobile & Offline Strategy',
+        description: 'Desarrollo de aplicaciones móviles con capacidades de sincronización avanzada en entornos remotos.',
+        icon: Smartphone
+    },
+    {
+        id: '6',
+        title: 'Liderazgo Técnico & Mentoring',
+        description: 'Gestión estratégica de equipos de ingeniería bajo metodologías ágiles y mentoría técnica.',
+        icon: Users
+    },
+];
 
 export const LEGAL_SPECIALTIES = [
     // --- BLOQUE ORIGINAL: ENFOQUE ESTRATÉGICO ---
@@ -140,6 +170,12 @@ export const LEGAL_SPECIALTIES = [
 */
 
 export const TECH_STACK_CATEGORIES = {
+    "IA & Automation": [
+        "Antigravity", "Copilot", "Gemini", "ChatGPT", "Suno", "DeepSeek", "Grama App", "StudioIA", "TensorFlow", "OpenAI"
+    ],
+    "Frontend & UI": [
+        "Next.js", "React", "Tailwind", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
+    ],
     "Backend & Arquitectura": [
         "Node.js", "NestJS", "Express", "Sequelize", "OutSystems", "REST/SOAP", "Microservices", "Java", "C#", "Python", "Go"
     ],
@@ -149,13 +185,13 @@ export const TECH_STACK_CATEGORIES = {
     "DevOps & Infra": [
         "Docker", "Nginx", "Linux", "PM2", "DigitalOcean", "Git", "AWS", "Azure", "Kubernetes", "CI/CD"
     ],
-    "Frontend & Diseño": [
-        "Next.js", "React", "Tailwind", "Figma (Concept)", "Angular", "Vue.js", "HTML/CSS", "TypeScript"
+    "Design & Multimedia": [
+        "Figma", "Photoshop", "Illustrator", "Premiere", "CapCut", "Studio FruityLoop", "After Effects"
     ]
 }
 
 export const LEGAL_STACK_CATEGORIES = {
-    "Áreas de Práctica": [
+    "Areas de Practica": [
         "Litigio Civil y Comercial",
         "Derecho Penal Económico",
         "Derecho Laboral y Seguridad Social",
@@ -205,7 +241,7 @@ export const LEGAL_STACK_CATEGORIES = {
         "Logística de Operaciones y Experiencia",
         "Compliance y Gestión de Riesgos"
     ],
-    "Idiomas & Jurisdicción": [
+    "Idiomas & Jurisdiccion": [
         "Inglés Jurídico", "Francés",
         "Derecho Civil (Sistema Románico-Germánico)",
         "Derecho Común (Common Law Foundations)",
@@ -234,10 +270,11 @@ export const LEGAL_OPTIONS = [
 
 export const STATS_CONFIG = {
     Tech: [
-        { label: 'Ranking Global', name: 'ranking', placeholder: '#339' },
+        { label: 'Outsystems Rank', name: 'ranking', placeholder: '#339' },
         { label: 'Experiencia', name: 'experience', placeholder: '+7 Años' },
-        { label: 'Nivel Seniority', name: 'level', placeholder: 'Senior' },
-        { label: 'Tech Stack', name: 'stack', placeholder: 'Full Stack' },
+        { label: 'Nivel', name: 'level', placeholder: 'Senior' },
+        { label: 'Stack', name: 'stack', placeholder: 'Full Stack' },
+        { label: 'REPOS', name: 'repos', placeholder: '50+' },
     ],
     Legal: [
         { label: 'Ciclo Académico', name: 'ciclo', placeholder: 'Noveno' },

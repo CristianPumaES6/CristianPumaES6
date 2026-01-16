@@ -225,6 +225,7 @@ export async function createProfile(formData: FormData) {
             pushStat('stat_experience', 'EXPERIENCIA')
             pushStat('stat_level', 'LEVEL')
             pushStat('stat_stack', 'STACK')
+            pushStat('stat_repos', 'REPOS')
         } else {
             pushStat('stat_ciclo', 'CICLO')
             pushStat('stat_merito', 'MÉRITO')
@@ -392,13 +393,12 @@ export async function updateProfile(id: string, formData: FormData) {
     }
 
     try {
-        await db.$transaction(async (tx) => {
+        await db.$transaction(async (tx: any) => {
             // 1. Update Basic Info
             await tx.profile.update({
                 where: { id },
                 data: {
-                    ...rawData,
-                    slug: slugify(rawData.name)
+                    ...rawData
                 }
             })
 
@@ -435,6 +435,7 @@ export async function updateProfile(id: string, formData: FormData) {
                 pushStat('stat_experience', 'EXPERIENCIA')
                 pushStat('stat_level', 'LEVEL')
                 pushStat('stat_stack', 'STACK')
+                pushStat('stat_repos', 'REPOS')
             } else {
                 pushStat('stat_ciclo', 'CICLO')
                 pushStat('stat_merito', 'MÉRITO')
@@ -721,7 +722,7 @@ export async function importProfile(jsonContent: string) {
         // We remove userId to assign to current user
         const {
             id, userId, createdAt, updatedAt, slug,
-            attributes, socials, experiences, projects, skillCategories, education, certifications,
+            attributes, socials, experiences, projects, skillCategories, education, certifications, workExperiences,
             ...primitiveFields
         } = data;
 

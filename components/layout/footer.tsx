@@ -3,7 +3,8 @@
 import { PROFILE } from "@/data/profile";
 import Link from "next/link";
 
-import { Github, Linkedin, Mail, Youtube, Link2 } from "lucide-react";
+import { Github, Linkedin, Mail, Youtube, Link2, MapPin } from "lucide-react";
+import { SiGmail, SiWhatsapp } from "react-icons/si";
 
 export function Footer({ profile }: { profile?: any }) {
     const data = profile ? {
@@ -40,14 +41,14 @@ export function Footer({ profile }: { profile?: any }) {
                     <div className="space-y-6">
                         <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary">Contacto</h4>
                         <ul className="space-y-3 text-sm text-muted-foreground font-mono">
-                            <li className="flex items-center gap-2 hover:text-white transition-colors">
-                                <span className="w-1 h-1 rounded-full bg-primary" /> {data.email}
+                            <li className="flex items-center gap-3 hover:text-white transition-colors group">
+                                <SiGmail className="text-primary w-4 h-4 group-hover:scale-110 transition-transform" /> {data.email}
                             </li>
-                            <li className="flex items-center gap-2 hover:text-white transition-colors">
-                                <span className="w-1 h-1 rounded-full bg-primary" /> {data.phone}
+                            <li className="flex items-center gap-3 hover:text-white transition-colors group">
+                                <SiWhatsapp className="text-primary w-4 h-4 group-hover:scale-110 transition-transform" /> {data.phone}
                             </li>
-                            <li className="flex items-center gap-2 hover:text-white transition-colors">
-                                <span className="w-1 h-1 rounded-full bg-primary" /> {data.location}
+                            <li className="flex items-center gap-3 hover:text-white transition-colors group">
+                                <MapPin className="text-primary w-4 h-4 group-hover:scale-110 transition-transform" /> {data.location}
                             </li>
                         </ul>
                     </div>
@@ -71,10 +72,10 @@ export function Footer({ profile }: { profile?: any }) {
 
                 <div className="border-t border-white/5 pt-12 text-center text-xs text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-6 uppercase tracking-widest font-mono">
                     <div className="flex gap-6">
-                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> SERVER_STATUS: OPTIMAL</span>
-                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> ENCRYPTION: AES-256</span>
+                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> SERVER : Online</span>
+                        <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> SEGURIDAD: AES-256</span>
                     </div>
-                    <p>© {new Date().getFullYear()} {data.name}. Designed by Cristian Puma & ProCard Engineering</p>
+                    <p>© {new Date().getFullYear()} {data.name}. Designed by LowCodeTool ProCard Engineering</p>
                 </div>
             </div>
         </footer>

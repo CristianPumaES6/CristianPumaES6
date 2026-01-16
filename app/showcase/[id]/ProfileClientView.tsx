@@ -10,7 +10,7 @@ import { Hero } from "@/components/sections/hero";
 import { About } from "@/components/sections/about";
 import { Projects as LandingProjects } from "@/components/sections/projects";
 import { Experience } from "@/components/sections/experience";
-import { Stack as LandingStack } from "@/components/sections/stack";
+import { LandingStack } from "@/components/sections/landing-stack";
 import { Footer as LandingFooter } from "@/components/layout/footer";
 
 const THEMES = {
@@ -120,15 +120,12 @@ export default function ProfileClientView({ id }: { id: string }) {
 
         return (
             <div className="bg-[#0B0F15] min-h-screen text-slate-300">
-                <nav className="fixed top-0 w-full z-50 h-16 flex items-center px-6 backdrop-blur-md border-b border-white/5 bg-[#0B0F15]/80">
-                    <Link href="/showcase" className="flex items-center gap-2 font-medium text-slate-400 hover:text-cyan-400 transition-colors">
-                        <ArrowLeft size={16} />
-                        <span>Regresar al Showcase</span>
-                    </Link>
-                </nav>
-
                 <Hero profile={profile} />
                 <About specialties={specialties?.length > 0 ? specialties : undefined} />
+                <LandingStack
+                    stack={stack}
+                    repos={profile.attributes?.find((a: any) => a.label === 'REPOS')?.value || '50+'}
+                />
                 <LandingProjects
                     projects={profile.projects}
                     yearsOfExperience={yearsOfExp}
@@ -136,7 +133,7 @@ export default function ProfileClientView({ id }: { id: string }) {
                     certifications={profile.certifications}
                 />
                 <Experience experiences={profile.workExperiences} />
-                <LandingStack stack={stack} />
+
                 <LandingFooter profile={profile} />
             </div>
         );
@@ -144,13 +141,6 @@ export default function ProfileClientView({ id }: { id: string }) {
 
     return (
         <div className={theme.page}>
-            <nav className={cn("fixed top-0 w-full z-50 h-16 flex items-center px-6 backdrop-blur-sm bg-white/90 border-b border-slate-100")}>
-                <Link href="/showcase" className="flex items-center gap-2 font-medium transition-colors text-slate-500 hover:text-slate-900">
-                    <ArrowLeft size={16} />
-                    <span>Back to Showcase</span>
-                </Link>
-            </nav>
-
             <main className={theme.container}>
                 <header className={theme.headerWrapper}>
                     <div className="relative py-12 text-center">

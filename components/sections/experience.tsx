@@ -8,6 +8,13 @@ import { cn } from "@/lib/utils";
 export function Experience({ experiences }: { experiences: any[] }) {
     if (!experiences || experiences.length === 0) return null;
 
+    const sortedExperiences = [...experiences].sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+            return (b.order || 0) - (a.order || 0);
+        }
+        return 0;
+    });
+
     return (
         <section id="experience" className="py-20 relative border-t border-white/5">
             <div className="container px-4 mx-auto">
@@ -22,7 +29,7 @@ export function Experience({ experiences }: { experiences: any[] }) {
                     {/* Vertical Line for Timeline Effect (Optional, simplistic version here) */}
                     <div className="absolute left-4 md:left-[2.25rem] top-4 bottom-4 w-0.5 bg-gradient-to-b from-cyan-500/50 via-blue-500/20 to-transparent hidden md:block" />
 
-                    {experiences.map((work, index) => (
+                    {sortedExperiences.map((work, index) => (
                         <motion.div
                             key={index}
                             initial={{ opacity: 0, x: -20 }}

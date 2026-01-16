@@ -33,15 +33,13 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
     const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
 
     // Tech Stack State
-    const [selectedStack, setSelectedStack] = useState<Record<string, string[]>>({
-        "Backend & Arquitectura": [],
-        "Bases de Datos": [],
-        "DevOps & Infra": [],
-        "Frontend & DiseÃ±o": [],
-        "Ãreas de PrÃ¡ctica": [],
-        "Herramientas LegalTech": [],
-        "Habilidades Profesionales": [],
-        "Idiomas & JurisdicciÃ³n": []
+    const [selectedStack, setSelectedStack] = useState<Record<string, string[]>>(() => {
+        const initialStack: Record<string, string[]> = {};
+        // Initialize keys dynamically from constants to ensure exact match
+        [...Object.keys(TECH_STACK_CATEGORIES), ...Object.keys(LEGAL_STACK_CATEGORIES)].forEach(key => {
+            initialStack[key] = [];
+        });
+        return initialStack;
     })
 
     // Projects State
@@ -119,16 +117,11 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
 
             // Load Tech Stack from SkillCategories
             if (profile.skillCategories) {
-                const stackData: any = {
-                    "Backend & Arquitectura": [],
-                    "Bases de Datos": [],
-                    "DevOps & Infra": [],
-                    "Frontend & DiseÃ±o": [],
-                    "Ãreas de PrÃ¡ctica": [],
-                    "Herramientas LegalTech": [],
-                    "Habilidades Profesionales": [],
-                    "Idiomas & JurisdicciÃ³n": []
-                }
+                const stackData: Record<string, any> = {};
+                // Initialize keys dynamically
+                [...Object.keys(TECH_STACK_CATEGORIES), ...Object.keys(LEGAL_STACK_CATEGORIES)].forEach(key => {
+                    stackData[key] = [];
+                });
                 profile.skillCategories.forEach((cat: any) => {
                     if (stackData[cat.name] !== undefined) {
                         const items = cat.items.map((i: any) => i.name)
@@ -240,6 +233,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     if (attr.label === 'EXPERIENCIA') initialStats['experience'] = attr.value
                     if (attr.label === 'LEVEL') initialStats['level'] = attr.value
                     if (attr.label === 'STACK') initialStats['stack'] = attr.value
+                    if (attr.label === 'REPOS') initialStats['repos'] = attr.value
 
                     if (attr.label === 'CICLO') initialStats['ciclo'] = attr.value
                     if (attr.label === 'MÉRITO') initialStats['merito'] = attr.value
@@ -260,6 +254,19 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         return statsValues[statName] || profile.attributes?.find((attr: any) => attr.type === 'Stat' && attr.name === statName)?.value || ''
     }
 
+    // Helper for stack selection safety
+    const isItemSelected = (category: string, item: string) => {
+        try {
+            if (!selectedStack) return false;
+            const catList = selectedStack[category];
+            if (!Array.isArray(catList)) return false;
+            return catList.includes(item);
+        } catch (e) {
+            console.error("Error checking item selection", e);
+            return false;
+        }
+    }
+
     const handleSpecialtyChange = (val: string) => {
         setSelectedSpecialties(prev =>
             prev.includes(val) ? prev.filter(s => s !== val) : [...prev, val]
@@ -267,18 +274,17 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
     }
 
     const toggleStackItem = (category: string, item: string) => {
+        console.log('Toggling:', category, item);
         setSelectedStack(prev => {
-            const currentItems = prev[category] || []
-            if (currentItems.includes(item)) {
-                return {
-                    ...prev,
-                    [category]: currentItems.filter(i => i !== item)
-                }
-            } else {
-                return {
-                    ...prev,
-                    [category]: [...currentItems, item]
-                }
+            if (!prev) return {};
+            const currentItems = prev[category] || [];
+            const newItems = currentItems.includes(item)
+                ? currentItems.filter(i => i !== item)
+                : [...currentItems, item];
+
+            return {
+                ...prev,
+                [category]: newItems
             }
         })
     }
@@ -393,10 +399,21 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         if (step < maxStep) setStep(step + 1);
     }
 
-    async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function onSubmit(event: any) {
         event.preventDefault()
         setIsPending(true)
-        const formData = new FormData(event.currentTarget)
+
+        // Find the form element
+        let formData: FormData;
+        const formElement = document.getElementById('edit-profile-form') as HTMLFormElement;
+
+        if (formElement) {
+            formData = new FormData(formElement);
+        } else {
+            console.error("Form element 'edit-profile-form' not found.");
+            // Panic fallback: try to create empty payload but this will likely fail validation
+            formData = new FormData();
+        }
 
         // Inject Specialties manually
         formData.delete('specialties')
@@ -520,10 +537,10 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
         return (
             <button
                 onClick={handleOpen}
-                className="w-full py-2.5 px-4 bg-slate-900 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all font-medium group mb-2 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
+                className="w-full py-2.5 px-4 bg-slate-900 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all font-medium group shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
             >
                 <Pencil size={14} className="group-hover:rotate-12 transition-transform" />
-                <span>Edit Identity</span>
+                <span>Editar Perfil</span>
             </button>
         )
     }
@@ -536,20 +553,20 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setIsOpen(false)} />
 
             {/* Modal Container */}
-            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-5xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 h-[85vh] flex flex-col relative z-20">
+            <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-5xl animate-in fade-in zoom-in-95 duration-300 h-[85vh] flex flex-col relative z-20">
 
                 {/* Header */}
-                <div className="bg-slate-950/60 px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center sticky top-0 z-30 backdrop-blur-sm">
+                <div className="bg-slate-950/60 px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center sticky top-0 z-30 backdrop-blur-sm rounded-t-2xl">
                     <div>
                         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
                             <Pencil size={20} className="text-cyan-500" />
-                            {step === 1 && 'Edit Basic Identity'}
-                            {step === 2 && 'Excellence Metrics'}
-                            {step === 3 && (industry === 'Tech' ? 'Technical Specialties' : 'Ãreas de EspecializaciÃ³n')}
-                            {step === 4 && (industry === 'Tech' ? 'Arsenal TecnolÃ³gico' : 'Competencias JurÃ­dicas')}
-                            {step === 5 && 'Academic Foundation'}
+                            {step === 1 && 'Editar Perfil'}
+                            {step === 2 && 'Métricas de Excelencia'}
+                            {step === 3 && (industry === 'Tech' ? 'Especialidades Técnicas' : 'Ã reas de EspecializaciÃ³n')}
+                            {step === 4 && (industry === 'Tech' ? 'Arsenal Full Stack' : 'Competencias JurÃ­dicas')}
+                            {step === 5 && 'Formación'}
                             {step === 6 && (industry === 'Tech' ? 'Cursos y Certificaciones' : 'FormaciÃ³n Continua')}
-                            {step === 7 && (industry === 'Tech' ? 'Project Portfolio' : 'Experiencia & Casos')}
+                            {step === 7 && (industry === 'Tech' ? 'Portafolio de Proyectos' : 'Experiencia & Casos')}
                         </h2>
                         <p className="text-[10px] text-cyan-500 font-mono uppercase tracking-[0.2em] mt-1 opacity-70">Configuration // Phase.{step < 10 ? `0${step}` : step} // Mode.Update</p>
                     </div>
@@ -558,8 +575,9 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle">
-                    <form id="edit-profile-form" onSubmit={onSubmit} className="space-y-10">
+                {/* MAIN CONTENT - FLEXIBLE HEIGHT */}
+                <div className="flex-1 w-full overflow-y-auto px-10 py-8 custom-scrollbar bg-grid-pattern-subtle min-h-0">
+                    <form id="edit-profile-form" className="space-y-10">
 
 
                         {/* STEP 1: BASIC INFO */}
@@ -581,7 +599,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                 </label>
                             </div>
 
-                            <div className="space-y-4 text-slate-900">
+                            <div className="space-y-4 text-slate-200">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Nombre</label><input name="firstName" defaultValue={profile.firstName} placeholder="Ej: Unlocking" className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
                                     <div><label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">Apellido</label><input name="lastName" defaultValue={profile.lastName} placeholder="Ej: Digital Resilience" className="w-full px-4 py-3 bg-slate-950/50 border border-white/10 rounded-xl outline-none focus:border-cyan-500 transition-all text-white placeholder:text-slate-600 text-sm" /></div>
@@ -632,7 +650,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                             <div className="grid grid-cols-2 gap-4">
                                 {(industry === 'Tech' ? STATS_CONFIG.Tech : STATS_CONFIG.Legal).map((stat) => (
                                     <div key={stat.name}>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">{stat.label}</label>
+                                        <label className="block text-xs font-bold text-cyan-500/60 uppercase tracking-widest mb-2">{stat.label}</label>
                                         <input
                                             name={`stat_${stat.name}`}
                                             defaultValue={getStatValue(stat.name)}
@@ -685,21 +703,24 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     <div key={catName} className="bg-slate-950 p-5 rounded-2xl border border-white/10 shadow-lg">
                                         <h4 className="text-sm font-bold text-slate-200 uppercase tracking-widest border-l-4 border-cyan-500 pl-3 mb-4">{catName}</h4>
                                         <div className="space-y-2">
-                                            {items.map(item => (
-                                                <label key={item} className="flex items-center gap-3 cursor-pointer group">
-                                                    <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${selectedStack[catName]?.includes(item) ? 'bg-cyan-500 border-cyan-500' : 'bg-slate-900 border-white/20 group-hover:border-cyan-400'}`}>
-                                                        {selectedStack[catName]?.includes(item) && <CheckCircle2 size={14} className="text-white" />}
-                                                    </div>
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only"
-                                                        checked={selectedStack[catName]?.includes(item) || false}
-                                                        onChange={() => toggleStackItem(catName, item)}
-                                                    />
-                                                    {industry === 'Tech' && <TechIcon name={item} className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors" />}
-                                                    <span className={`text-sm ${selectedStack[catName]?.includes(item) ? 'text-slate-200 font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>{item}</span>
-                                                </label>
-                                            ))}
+                                            {items.map(item => {
+                                                const isSelected = isItemSelected(catName, item);
+                                                return (
+                                                    <label key={item} className="flex items-center gap-3 cursor-pointer group">
+                                                        <div className={`w-5 h-5 rounded border border-slate-300 flex items-center justify-center transition-colors ${isSelected ? 'bg-cyan-500 border-cyan-500' : 'bg-slate-900 border-white/20 group-hover:border-cyan-400'}`}>
+                                                            {isSelected && <CheckCircle2 size={14} className="text-white" />}
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="sr-only"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleStackItem(catName, item)}
+                                                        />
+                                                        {industry === 'Tech' && <TechIcon name={item} className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors" />}
+                                                        <span className={`text-sm ${isSelected ? 'text-slate-200 font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>{item}</span>
+                                                    </label>
+                                                )
+                                            })}
                                         </div>
                                     </div>
                                 ))}
@@ -719,27 +740,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     {showEduList && (
-                                        <Reorder.Group axis="y" values={education} onReorder={setEducation} className="space-y-3">
-                                            {education.map((edu, idx) => (
-                                                <Reorder.Item key={edu._id} value={edu} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
-                                                    <div className="flex items-center gap-3">
-                                                        <GripVertical size={16} className="text-slate-600" />
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm">{edu.institution}</div>
-                                                            <div className="text-xs text-slate-500 font-mono">{edu.degree} â€¢ {edu.period}</div>
+                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                            <Reorder.Group axis="y" values={education} onReorder={setEducation} className="space-y-3">
+                                                {education.map((edu, idx) => (
+                                                    <Reorder.Item key={edu._id} value={edu} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                        <div className="flex items-center gap-3">
+                                                            <GripVertical size={16} className="text-slate-600" />
+                                                            <div>
+                                                                <div className="font-bold text-white text-sm">{edu.institution}</div>
+                                                                <div className="text-xs text-slate-500 font-mono">{edu.degree} • {edu.period}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                        <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => editEducation(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            <button type="button" onClick={() => removeEducation(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
@@ -842,27 +865,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     {showCertList && (
-                                        <Reorder.Group axis="y" values={certifications} onReorder={setCertifications} className="space-y-3">
-                                            {certifications.map((cert, idx) => (
-                                                <Reorder.Item key={cert._id} value={cert} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
-                                                    <div className="flex items-center gap-3">
-                                                        <GripVertical size={16} className="text-slate-600" />
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm">{cert.title}</div>
-                                                            <div className="text-xs text-slate-500 font-mono">{cert.provider} â€¢ {cert.date}</div>
+                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                            <Reorder.Group axis="y" values={certifications} onReorder={setCertifications} className="space-y-3">
+                                                {certifications.map((cert, idx) => (
+                                                    <Reorder.Item key={cert._id} value={cert} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                        <div className="flex items-center gap-3">
+                                                            <GripVertical size={16} className="text-slate-600" />
+                                                            <div>
+                                                                <div className="font-bold text-white text-sm">{cert.title}</div>
+                                                                <div className="text-xs text-slate-500 font-mono">{cert.provider} • {cert.date}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                        <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => editCertification(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Editar">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            <button type="button" onClick={() => removeCertification(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all" title="Eliminar">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
@@ -936,27 +961,29 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                     </div>
 
                                     {showProjList && (
-                                        <Reorder.Group axis="y" values={projects} onReorder={setProjects} className="space-y-3">
-                                            {projects.map((p, idx) => (
-                                                <Reorder.Item key={p._id} value={p} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
-                                                    <div className="flex items-center gap-3">
-                                                        <GripVertical size={16} className="text-slate-600" />
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm">{p.title}</div>
-                                                            <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} â€¢ {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
+                                        <div className="max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
+                                            <Reorder.Group axis="y" values={projects} onReorder={setProjects} className="space-y-3">
+                                                {projects.map((p, idx) => (
+                                                    <Reorder.Item key={p._id} value={p} className="flex items-center justify-between bg-slate-950/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing">
+                                                        <div className="flex items-center gap-3">
+                                                            <GripVertical size={16} className="text-slate-600" />
+                                                            <div>
+                                                                <div className="font-bold text-white text-sm">{p.title}</div>
+                                                                <div className="text-xs text-slate-500 font-mono tracking-tight">{p.client || 'Internal Core'} • {p.tags.length} {industry === 'Tech' ? 'active technologies' : 'competencias'}</div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                        <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </Reorder.Item>
-                                            ))}
-                                        </Reorder.Group>
+                                                        <div className="flex items-center gap-2">
+                                                            <button type="button" onClick={() => editProject(idx)} className="text-slate-500 hover:text-cyan-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            <button type="button" onClick={() => removeProject(idx)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-lg transition-all">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </Reorder.Item>
+                                                ))}
+                                            </Reorder.Group>
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -1144,7 +1171,7 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                                                 value={currentWorkExp.company}
                                                 onChange={(e) => setCurrentWorkExp({ ...currentWorkExp, company: e.target.value })}
                                                 className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all font-bold placeholder:text-slate-700 font-mono"
-                                                placeholder="TRANSGAS"
+                                                placeholder="LowCodeTool"
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -1256,25 +1283,26 @@ export function EditProfileModal({ profile, onSuccess }: { profile: any, onSucce
                     </form>
                 </div>
 
-                <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40">
+                <div className="shrink-0 pt-6 pb-6 px-10 flex justify-between gap-4 border-t border-cyan-500/20 bg-slate-950 z-40 rounded-b-2xl mt-auto">
                     {step > 1 ? (
-                        <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Back</button>
+                        <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Anterior</button>
                     ) : (
-                        <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancel</button>
+                        <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-medium transition-all">Cancelar</button>
                     )}
 
                     {step === 8 ? (
-                        <button type="submit" form="edit-profile-form" disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
-                            {isPending ? 'DEPLOYING...' : 'UPDATE_PROFILE'}
+                        <button type="button" onClick={onSubmit} disabled={isPending} className="bg-cyan-500 text-black px-10 py-2.5 rounded-lg font-bold hover:bg-cyan-400 disabled:opacity-50 ml-auto shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                            {isPending ? 'ACTUALIZANDO...' : 'ACTUALIZAR'}
                         </button>
                     ) : (
                         <button type="button" onClick={handleNext} className="bg-white text-black px-10 py-2.5 rounded-lg font-bold hover:bg-slate-200 ml-auto transition-all">
-                            Next
+                            Siguiente
                         </button>
                     )}
                 </div>
             </div>
-        </div>,
+        </div >,
         document.body
     )
 }
+

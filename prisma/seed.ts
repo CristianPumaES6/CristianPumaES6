@@ -63,7 +63,7 @@ async function main() {
                     },
                     {
                         title: "Information Manager",
-                        organization: "TRANSGAS SHIPPING LINES",
+                        organization: "LowCodeTool",
                         period: "2020 - Julio 2025",
                         type: "Job",
                         highlights: {
